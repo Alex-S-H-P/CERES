@@ -38,7 +38,6 @@ func TestCeres_TypeAdding(t *testing.T){
 
 }
 
-
 func TestICS_LevelsOfAbstractions(t *testing.T) {
     // setup
     c := new(CERES)
@@ -52,7 +51,7 @@ func TestICS_LevelsOfAbstractions(t *testing.T) {
     box := c.ics.createEntityType("box")
     thing.addChild(box)
     shmoop := c.ics.createEntityInstance("shmoop", thing)
-    John := c.ics.createEntityInstance("living being", thing)
+    John := c.ics.createEntityInstance("john", living_being)
 
     if i, e := LevelsOfAbstractionBetween(thing, c.root); i != -1 || e != nil {
         t.Errorf("Unexpected result : (%v instead of %v, %v instead of %v)",
@@ -83,6 +82,26 @@ func TestICS_LevelsOfAbstractions(t *testing.T) {
         t.Errorf("Unexpected result : (%v instead of %v, %v instead of %v)",
             i, 0, e, "non-nil error")
     }
+}
 
+func TestIsTypeOf(t *testing.T) {
+    // setup
+    c := new(CERES)
+    c.Initialize()
+    c.createEntityType("caracteristic")
+    c.createEntityType("action")
+    c.createEntityType("thing")
+    thing := (*c.root.children)[2].(*EntityType)
+    living_being := c.ics.createEntityType("living being")
+    thing.addChild(living_being)
+    box := c.ics.createEntityType("box")
+    thing.addChild(box)
+    John := c.ics.createEntityInstance("John", living_being)
 
+    if !IsTypeOf(John, living_being) {
+        t.Errorf("IsTypeOf failed")
+    }
+    if IsTypeOf(living_being, living_being) {
+        t.Errorf("Entities should not match with themselves")
+    }
 }
