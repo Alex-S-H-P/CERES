@@ -4,10 +4,12 @@ package ceres
 type CERES struct {
     ics ICS
     pcs PCS
+    ctx CTX
 
     root *EntityType
 
     initialized bool
+
 }
 
 func (c *CERES)Initialize(){
@@ -15,6 +17,8 @@ func (c *CERES)Initialize(){
     c.ics.Initialize()
     c.pcs = PCS{}
     c.pcs.Initialize()
+    c.ctx = CTX{}
+    c.ctx.Initialize()
 
     c.createEntityType("entity")
 
