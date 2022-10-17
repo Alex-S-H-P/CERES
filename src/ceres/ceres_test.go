@@ -105,3 +105,13 @@ func TestIsTypeOf(t *testing.T) {
         t.Errorf("Entities should not match with themselves")
     }
 }
+
+func TestSentenceParser(t *testing.T){
+    c := new(CERES)
+    c.Initialize()
+    c.createEntityType("caracteristic")
+    c.createEntityType("action")
+    c.createEntityType("thing")
+
+    c.ParseSentence("hello, I am alexandre")
+}
