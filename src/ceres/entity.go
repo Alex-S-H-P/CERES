@@ -2,6 +2,8 @@ package ceres
 
 import (
     "fmt"
+
+    "CERES/src/utils"
 )
 
 type EntityType struct {
@@ -36,10 +38,13 @@ func (et *EntityType) directTypeOf() *EntityType{
 type Entity interface {
     directTypeOf() *EntityType
     Initialize()
+    Equal(utils.Equalable) bool
 }
 
-/* returns true if the entity e is of type t.
-There can be intermediate types between the two */
+/*
+Returns true if the entity e is of type t.
+There can be intermediate types between the two
+*/
 func IsTypeOf(e Entity, t *EntityType) bool {
     if e.directTypeOf() == nil {
         return false
@@ -105,4 +110,16 @@ func (et *EntityType)addChild(e Entity) {
         *et.children = append(*(et.children), ei)
         et.attributes.parentInstance(ei.values)
     }
+}
+
+func (e *EntityType) Equal(other utils.Equalable) bool {
+    if o, ok := other.(*EntityType); ok {
+        return e == o
+    } else {return false}
+}
+
+func (e *EntityInstance) Equal(other utils.Equalable) bool {
+    if o, ok := other.(*EntityInstance); ok {
+        return e == o
+    } else {return false}
 }
