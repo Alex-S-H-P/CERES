@@ -7,7 +7,7 @@ import (
 
 func TestCERES_Initialization(t*testing.T){
     ceres := new(CERES)
-    ceres.Initialize()
+    ceres.Initialize(1)
 
     if !ceres.initialized {
         t.Errorf("CERES should have been marked as initialized")
@@ -28,7 +28,7 @@ func TestCERES_Initialization(t*testing.T){
 
 func TestCeres_TypeAdding(t *testing.T){
     c := new(CERES)
-    c.Initialize()
+    c.Initialize(1)
     c.createEntityType("caracteristic")
     if len(*c.root.children) != 1 {
         t.Errorf("Created a child for the root, but the root did not care")
@@ -41,7 +41,7 @@ func TestCeres_TypeAdding(t *testing.T){
 func TestICS_LevelsOfAbstractions(t *testing.T) {
     // setup
     c := new(CERES)
-    c.Initialize()
+    c.Initialize(1)
     c.createEntityType("caracteristic")
     c.createEntityType("action")
     c.createEntityType("thing")
@@ -87,7 +87,7 @@ func TestICS_LevelsOfAbstractions(t *testing.T) {
 func TestIsTypeOf(t *testing.T) {
     // setup
     c := new(CERES)
-    c.Initialize()
+    c.Initialize(1)
     c.createEntityType("caracteristic")
     c.createEntityType("action")
     c.createEntityType("thing")
@@ -108,7 +108,7 @@ func TestIsTypeOf(t *testing.T) {
 
 func TestSentenceParser(t *testing.T){
     c := new(CERES)
-    c.Initialize()
+    c.Initialize(1)
     c.createEntityType("caracteristic")
     c.createEntityType("action")
     c.createEntityType("thing")

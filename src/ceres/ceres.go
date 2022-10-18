@@ -10,15 +10,18 @@ type CERES struct {
 
     initialized bool
 
+    sentence_analyser_workers int
+
 }
 
-func (c *CERES)Initialize(){
+func (c *CERES)Initialize(workers int){
     c.ics = ICS{}
-    c.ics.Initialize()
     c.pcs = PCS{}
     c.pcs.Initialize()
     c.ctx = CTX{}
     c.ctx.Initialize()
+
+    c.sentence_analyser_workers = 1
 
     c.createEntityType("entity")
 
