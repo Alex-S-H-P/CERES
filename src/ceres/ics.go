@@ -8,10 +8,13 @@ type ICS struct {
     eDMutex sync.RWMutex
 
     initialized bool
+
+    master *CERES
 }
 
-func (ics *ICS)Initialize() {
+func (ics *ICS)Initialize(master *CERES) {
     ics.entityDictionary = make(map[Word]*DictionaryEntry)
+    ics.master = master
     ics.initialized = true
 }
 

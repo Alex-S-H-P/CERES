@@ -16,6 +16,7 @@ type CERES struct {
 
 func (c *CERES)Initialize(workers int){
     c.ics = ICS{}
+    c.ics.Initialize(c)
     c.pcs = PCS{}
     c.pcs.Initialize()
     c.ctx = CTX{}
