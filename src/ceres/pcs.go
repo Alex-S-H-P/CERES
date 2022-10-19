@@ -91,7 +91,7 @@ func (pcs *PCS)IsPronoun(w Word) bool{
     return ok
 }
 
-func (pcs *PCS) Match() Entity{
+func (pcs *PCS) Match(w Word) Entity{
     // TODO: do this
     return nil
 }

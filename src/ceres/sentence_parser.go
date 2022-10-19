@@ -111,15 +111,27 @@ func (c *CERES) ParseSentence(sentence string) []Entity {
 	fmt.Println("Now solving pronouns.")
 
 	var tokens_analysed []int = make([]int, 0, len(tokens))
-
+	var tokens_to_analyse [][]Word = make([][]Word, 0, len(tokens))
+	var last_id int = -1
+	var initialMap map[positionTuple]Entity = make(map[positionTuple]Entity)
 	// checking for pronouns
 	for i, word := range tokens {
 		if c.pcs.IsPronoun(word) {
+			if i > last_id + 1 {
+				tokens_to_analyse = append(tokens_to_analyse,
+					tokens[last_id+1:i])
+			}
 			tokens_analysed = append(tokens_analysed, i)
+			initialMap[positionTuple{i:i, j:i}] = c.pcs.Match(word)
 		}
 	}
 	var wg *sync.WaitGroup = new(sync.WaitGroup)
 	var ls *organizedDijkstraList = newDijkstraList()
+	ls.list = make([]*ics_DijkstraPossibility, 0, 1024)
+	initial_point := ics_DijkstraPossibility{curP:0.,
+		collapsedAnalysedSentence:initialMap, tokens_analysed:tokens_analysed,
+		tokens_toAnalyse:tokens_to_analyse}
+	ls.list = append(ls.list, &initial_point)
 	wg.Add(c.sentence_analyser_workers)
 	candidate := c.ics.dijkstra_main(ls, c.sentence_analyser_workers, wg)
 	return candidate.collapse()
