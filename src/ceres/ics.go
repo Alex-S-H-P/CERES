@@ -67,3 +67,9 @@ func (ics*ICS)createEntityInstance(w Word, et *EntityType) *EntityInstance{
 
     return ei
 }
+
+
+func (ics *ICS) estimateP(possibility *ics_DijkstraPossibility) float64{
+    // TODO: make this
+    return 0.
+}
