@@ -7,9 +7,9 @@ const OrPattern = `|`
 
 const IntNumberPattern = `\d+([ ._,]\d+)*`
 const NumberPattern = IntNumberPattern + `[\.,]?\d*`
-const MoneyPattern = `[₠₢₡₣₤₥₦₧₨₩₪₫€₹₭₸₮$₯₰₷₶₱₲₳₴₵]`
-const PricePattern = MoneyPattern + OptionalSpace + NumberPattern +
-	OrPattern + NumberPattern + OptionalSpace + MoneyPattern
+const CurrencyPattern = `[₠₢₡₣₤₥₦₧₨₩₪₫€₹₭₸₮$₯₰₷₶₱₲₳₴₵]`
+const PricePattern = CurrencyPattern + OptionalSpace + NumberPattern +
+	OrPattern + NumberPattern + OptionalSpace + CurrencyPattern
 
 const WordPattern = `[a-zà-üA-ZÀ-Ü]+\'?`
 
