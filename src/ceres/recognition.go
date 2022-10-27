@@ -42,17 +42,15 @@ const (
     TOKEN_TYPE_PRIC tokenT = 12
 )
 
-func recognizeType(token string) {
-    switch {
-    case ok, _ := re.MatchString(utils.WordPattern, token); ok:
+func recognizeType(token string) tokenT{
+    if ok, _ := re.MatchString(utils.WordPattern, token); ok{
         return TOKEN_TYPE_WORD
-    case ok, _ := re.MatchString(utils.PricePattern, token); ok:
+    } else if  ok, _ := re.MatchString(utils.PricePattern, token); ok {
         return TOKEN_TYPE_PRIC
-    case ok, _ := re.MatchString(utils.CurrencyPattern, token); ok:
+    } else if ok, _ := re.MatchString(utils.CurrencyPattern, token); ok {
         return TOKEN_TYPE_CURR
-    case ok, _ := re.MatchString(utils.NumberPattern, token); ok:
+    } else if ok, _ := re.MatchString(utils.NumberPattern, token); ok {
         return TOKEN_TYPE_NUMB
-    case ok, _ := re.MatchString(utils.UnknownPattern, token); ok:
-        return TOKEN_TYPE_UNKN
     }
+    return TOKEN_TYPE_CURR
 }
