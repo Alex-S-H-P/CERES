@@ -17,5 +17,5 @@ const UnknownPattern = `[^\t \n\r.?;:/\\*-+]`
 const PonctuationPattern = `[.,;:?!]`
 const EOSPossiblePattern = `[.?!]|$`
 
-const TokenPattern = WordPattern + OrPattern + NumberPattern +
-	   OrPattern + PricePattern + OrPattern + UnknownPattern
+const TokenPattern = WordPattern +  OrPattern + PricePattern + OrPattern +
+ 			NumberPattern + OrPattern + UnknownPattern
