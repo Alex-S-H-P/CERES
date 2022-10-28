@@ -40,3 +40,11 @@ func (b *Buffer[T])Contains(t T) bool {
     }
     return false
 }
+
+func (b *Buffer[T])Len() int {
+    return len(b.contents)
+}
+
+func (b *Buffer[T])MaxSize() int {
+    return b.maxsize
+}
