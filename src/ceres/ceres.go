@@ -4,7 +4,7 @@ package ceres
 type CERES struct {
     ics ICS
     pcs PCS
-    ctx CTX
+    ctx *CTX
 
     root *EntityType
 
@@ -19,7 +19,7 @@ func (c *CERES)Initialize(workers int){
     c.ics.Initialize(c)
     c.pcs = PCS{}
     c.pcs.Initialize()
-    c.ctx = CTX{}
+    c.ctx = new(CTX)
     c.ctx.Initialize()
 
     c.sentence_analyser_workers = 1
