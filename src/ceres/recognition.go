@@ -54,3 +54,7 @@ func recognizeType(token string) tokenT{
     }
     return TOKEN_TYPE_CURR
 }
+
+func MakeRecognizedEntity(e Entity, p bool, a bool) RecognizedEntity{
+    return RecognizedEntity{entity:e, possessive:p, attribute:a}
+}
