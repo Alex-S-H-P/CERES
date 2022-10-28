@@ -4,8 +4,7 @@ import (
     "CERES/src/utils"
 )
 
-
-type SOMEONE *EntityInstance // in particular, SOMEONE is either human or self
+type SOMEONE = *EntityInstance // in particular, SOMEONE is either human or self
 
 /*
 The conversationnal context.
