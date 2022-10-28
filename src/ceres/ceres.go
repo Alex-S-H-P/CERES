@@ -49,3 +49,9 @@ func (c *CERES)  createEntityType(w Word) {
 func (c *CERES) createEntityInstance(w Word, et *EntityType) {
     c.ics.createEntityInstance(w, et)
 }
+
+
+func (c* CERES) computeP(idp *dijkstraPossibility) float64 {
+    // TODO: Do this
+    return 0.
+}

@@ -9,6 +9,7 @@ type RecognizedEntity struct {
     entity      Entity
     possessive  bool
     attribute   bool
+    proposer    proposer
 }
 
 /*
@@ -55,6 +56,10 @@ func recognizeType(token string) tokenT{
     return TOKEN_TYPE_CURR
 }
 
-func MakeRecognizedEntity(e Entity, p bool, a bool) RecognizedEntity{
-    return RecognizedEntity{entity:e, possessive:p, attribute:a}
+func MakeRecognizedEntity(e Entity, p bool, a bool, pr proposer) RecognizedEntity{
+    return RecognizedEntity{entity:e, possessive:p, attribute:a, proposer:pr}
+}
+
+type proposer interface {
+    proposeOptions(Word, *CTX) []RecognizedEntity
 }

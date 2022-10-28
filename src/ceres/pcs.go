@@ -1,15 +1,15 @@
 package ceres
 
 import (
-    "strings"
+    // "strings"
 )
 
 const(
     // gender
-    MALE    int8 =  1
-    FEMALE  int8 = -1
-    NEUTRAL int8 = -2
-    UNKNOWN int8 =  2
+    MALE    int8 =  0
+    FEMALE  int8 =  1
+    NEUTRAL int8 =  2
+    UNKNOWN int8 =  3
 
     // number
     SINGULAR int8 = 0
@@ -17,61 +17,35 @@ const(
     DUAL     int8 = 2
 
     // special codes
-    SPEAKER     int8 = 127
-    DESTINATOR  int8 = -127
+    PERSON1   int8 = 0
+    PERSON2   int8 = 1
+    PERSON3   int8 = 2
 )
 
-func GN_to_Code(gender_and_number string) int8 {
-    gender_and_number = strings.ToLower(gender_and_number)
-    if gender_and_number == "speaker" || gender_and_number == "speak" {
-        return SPEAKER
-    } else if gender_and_number == "dest" || gender_and_number == "destinator" {
-        return DESTINATOR
-    }
-
-    var gender_multiplier int8
-    switch {
-    case strings.Contains(gender_and_number, "male"):
-        gender_multiplier = MALE
-    case strings.Contains(gender_and_number, "female"):
-        gender_multiplier = FEMALE
-    case strings.Contains(gender_and_number, "neutral"):
-        gender_multiplier = NEUTRAL
-    default:
-        gender_multiplier = UNKNOWN
-    }
-    var number_indicator int8=DUAL
-    switch {
-    case strings.Contains(gender_and_number, "singular") || strings.Contains(gender_and_number, "sing"):
-        number_indicator = SINGULAR
-    case strings.Contains(gender_and_number, "plural") || strings.Contains(gender_and_number, "pl"):
-        number_indicator = PLURAL
-    }
-
-    return 8*gender_multiplier + number_indicator
-}
-
-
 type Pronoun struct {
-    GenderAndNumber int8
+    GNP int8
     Posessive bool
     Adjective bool
 }
 
-func (p Pronoun) IsDestinator() bool {
-    return p.GenderAndNumber == DESTINATOR
-}
-
-func (p Pronoun)IsSpeaker() bool {
-    return p.GenderAndNumber == SPEAKER
-}
-
 func (p Pronoun)Gender() int8 {
-    return p.GenderAndNumber / 8
+    return (p.GNP / 4) % 4
 }
 
 func (p Pronoun)Number() int8 {
-    return p.GenderAndNumber % 8
+    return p.GNP % 4
+}
+
+func (p Pronoun)Person() int8 {
+    return (p.GNP) / 16
+}
+
+func (p Pronoun) GNP_Sep() (int8, int8, int8) {
+    return p.Gender(), p.Number(), p.Person()
+}
+
+func(p Pronoun) MakeGNP(gender int8, number int8, person int8) {
+    p.GNP = person * 16 + number * 4 + person
 }
 
 type PCS struct {
@@ -91,26 +65,23 @@ func (pcs *PCS)IsPronoun(w Word) bool{
     return ok
 }
 
-func (pcs *PCS) Match(w Word) Entity{
-    // TODO: do this
-    return nil
 func (pcs*PCS)proposeOptions(w Word, ctx *CTX) []RecognizedEntity {
     if pronoun, ok := pcs.pronounDictionary[w]; ok {
         entities := make([]RecognizedEntity, 0, 64)
         g, n, p := pronoun.GNP_Sep()
         if p == PERSON1 && n == SINGULAR {
             return []RecognizedEntity{MakeRecognizedEntity(ctx.SPEAKER,
-                    pronoun.Posessive, false)}
+                    pronoun.Posessive, false, pcs)}
         } else if p == PERSON2 {
             return []RecognizedEntity{MakeRecognizedEntity(ctx.DESTINATOR,
-                 pronoun.Posessive, false)}
+                 pronoun.Posessive, false, pcs)}
         }
         for i := 0; i<ctx.expressed_buffer.Len(); i++ {
             buffered := ctx.expressed_buffer.Get(i)
             if buffered.GetGender() == g || g == UNKNOWN || buffered.GetGender() == UNKNOWN {
                 if buffered.GetNumber() == n {
                     entities = append(entities, MakeRecognizedEntity(buffered,
-                        pronoun.Posessive, false))
+                        pronoun.Posessive, false, pcs))
                 }
             }
         }

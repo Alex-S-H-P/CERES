@@ -2,60 +2,40 @@ package ceres
 
 import (
 	"fmt"
-	"strings"
-	"regexp"
-	"time"
+	re "regexp"
 	"sync"
 
 	"CERES/src/utils"
 )
 
-var SPLITTER = regexp.MustCompile("[ ,\t']")
+var RegexpToken *re.Regexp = re.MustCompile(utils.TokenPattern)
 
-type positionTuple struct {
-	i,j int
-}
-
-type ics_DijkstraPossibility struct {
-	// current probability
+type dijkstraPossibility struct {
 	curP float64
-	// current list of analysed entities.
-	collapsedAnalysedSentence map[positionTuple]Entity
-	// current list of remaining words to analyse.
-	tokens_analysed[]int // cap tokens_analysed == len(tokens)
-	// token groups that have not yet been analysed.
-	tokens_toAnalyse [][]Word
+	tokens []string
+	analysedUntil int// this index excluded
+	analyseResult []RecognizedEntity
 }
 
-
-// collapses the collapsedAnalysedSentence map into an ordered list of entities
-func (idp *ics_DijkstraPossibility)collapse() []Entity {
-	var reslt []Entity = make([]Entity, 0, len(idp.collapsedAnalysedSentence))
-	var i int
-	for i < len(idp.collapsedAnalysedSentence) {
-		for k, v := range idp.collapsedAnalysedSentence {
-			if k.i == i {
-				reslt = append(reslt, v)
-				i = k.j + 1
-				continue
-			}
-		}
-	}
-	return reslt
+func (idp *dijkstraPossibility) makeChild(re RecognizedEntity, offset int) *dijkstraPossibility{
+	child := new(dijkstraPossibility)
+	child.curP = 0
+	child.tokens = idp.tokens
+	child.analysedUntil = idp.analysedUntil + offset
+	child.analyseResult = append(make([]RecognizedEntity, 0, cap(idp.analyseResult)),
+				idp.analyseResult...)
+	child.analyseResult = append(child.analyseResult, re)
+	return child
 }
+
+func (idp *dijkstraPossibility) completed() bool { return len(idp.tokens) == idp.analysedUntil }
 
 type organizedDijkstraList struct {
-	list []*ics_DijkstraPossibility
-	rwm  sync.RWMutex
+	list []*dijkstraPossibility
+	rwm sync.Mutex
 }
 
-func newDijkstraList() *organizedDijkstraList{
-	ls := new(organizedDijkstraList)
-	ls.list = make([]*ics_DijkstraPossibility, 0, 1024)
-	return ls
-}
-
-func (odl *organizedDijkstraList)pop() *ics_DijkstraPossibility{
+func (odl *organizedDijkstraList)pop() *dijkstraPossibility{
 	if odl.rwm.TryLock() {
 		odl.rwm.Lock()
 		defer odl.rwm.Unlock()
@@ -67,7 +47,7 @@ func (odl *organizedDijkstraList)pop() *ics_DijkstraPossibility{
 	return a
 }
 
-func (odl *organizedDijkstraList)put(possibility *ics_DijkstraPossibility) {
+func (odl *organizedDijkstraList)put(possibility *dijkstraPossibility) {
 	if odl.rwm.TryLock() {
 		odl.rwm.Lock()
 		defer odl.rwm.Unlock()
@@ -92,150 +72,125 @@ func (odl *organizedDijkstraList)getRank(P float64) int {
 	return b
 }
 
-func (idp *ics_DijkstraPossibility) completed() bool { return len(idp.tokens_toAnalyse) == 0 }
+func (odl *organizedDijkstraList)finished()bool {return odl.list[0].completed()}
 
-func (c *CERES) ParseSentence(sentence string) []Entity {
-	var tokens []Word
+func (c *CERES)ParseSentence(sentence string)[]RecognizedEntity{
+	tokens := RegexpToken.FindAllString(sentence, len(sentence)/2)
+	var n int = len(tokens)
+	fmt.Println(tokens[:n])
 
-	pre_tokens := SPLITTER.Split(sentence, len(sentence))
+	var odl = new(organizedDijkstraList)
+	odl.list = make([]*dijkstraPossibility, 0, 2048)
+	odl.list = append(odl.list, &dijkstraPossibility{curP:0,
+		 tokens:tokens, analysedUntil:0})
+	 wg := new(sync.WaitGroup)
 
-	tokens = make([]Word, 0, len(pre_tokens))
-
-	for _, token := range pre_tokens {
-		if len(token) > 0 {
-			tokens = append(tokens, Word(token).Lower())
-		}
-	}
-
-	// the sentence is split in words
-	fmt.Println("Now solving pronouns.")
-
-	var tokens_analysed []int = make([]int, 0, len(tokens))
-	var tokens_to_analyse [][]Word = make([][]Word, 0, len(tokens))
-	var last_id int = -1
-	var initialMap map[positionTuple]Entity = make(map[positionTuple]Entity)
-	// checking for pronouns
-	for i, word := range tokens {
-		if c.pcs.IsPronoun(word) {
-			if i > last_id + 1 {
-				tokens_to_analyse = append(tokens_to_analyse,
-					tokens[last_id+1:i])
-			}
-			tokens_analysed = append(tokens_analysed, i)
-			initialMap[positionTuple{i:i, j:i}] = c.pcs.Match(word)
-		}
-	}
-	var wg *sync.WaitGroup = new(sync.WaitGroup)
-	var ls *organizedDijkstraList = newDijkstraList()
-	ls.list = make([]*ics_DijkstraPossibility, 0, 1024)
-	initial_point := ics_DijkstraPossibility{curP:0.,
-		collapsedAnalysedSentence:initialMap, tokens_analysed:tokens_analysed,
-		tokens_toAnalyse:tokens_to_analyse}
-	ls.list = append(ls.list, &initial_point)
-	wg.Add(c.sentence_analyser_workers)
-	candidate := c.ics.dijkstra_main(ls, c.sentence_analyser_workers, wg)
-	return candidate.collapse()
+	return c.dijkstra_main(odl, wg).analyseResult
 }
 
-func (ics*ICS) dijkstra_main(list *organizedDijkstraList, workers int,
-	wg *sync.WaitGroup) *ics_DijkstraPossibility{
-	// setup of all workers
-	handle_chan := make(chan *ics_DijkstraPossibility, 8*workers)
-	counter_chans := make([]chan *sync.WaitGroup, 0, workers)
-	for w_id := 0; w_id < workers; w_id++ {
+func (c *CERES) dijkstra_main(odl *organizedDijkstraList,
+	wg *sync.WaitGroup) *dijkstraPossibility {
+	// setting up all workers
+	handle_chan := make(chan *dijkstraPossibility, 4*c.sentence_analyser_workers)
+	counter_chans := make([]chan *sync.WaitGroup, 0, c.sentence_analyser_workers)
+	now_empty_chans := make([]chan bool, 0, c.sentence_analyser_workers)
+
+	wg.Add(c.sentence_analyser_workers)
+	for w_id := 0; w_id < c.sentence_analyser_workers; w_id++ {
 		counter_chan := make(chan *sync.WaitGroup)
 		counter_chans = append(counter_chans, counter_chan)
-		go ics.worker_main(list, wg, handle_chan, counter_chan )
+		now_empty_chan := make(chan bool)
+		now_empty_chans = append(now_empty_chans, now_empty_chan)
+		go c.worker_main(odl, wg, handle_chan, counter_chan, now_empty_chan)
 	}
 
 	for {
-		list.rwm.Lock()
-		candidate := list.pop()
-		list.rwm.Unlock()
+		odl.rwm.Lock()
+		candidate := odl.pop()
+		odl.rwm.Unlock()
 		if candidate.completed() {
 			// this candidate is the best one
 			return candidate
 		} else  {
 			// we inform all workers
 			counter := new(sync.WaitGroup)
-			counter.Add(workers)
+			counter.Add(c.sentence_analyser_workers)
 			for _, channel := range counter_chans {
 				channel <- counter
 			}
 			// we evolve the possibility
-			ics.evolve(candidate, handle_chan)
+			c.evolve(candidate, handle_chan, now_empty_chans)
 			counter.Wait()
 		}
 	}
 }
 
-func (ics *ICS)worker_main(list *organizedDijkstraList, wg *sync.WaitGroup,
-	handle_chan chan *ics_DijkstraPossibility, counter_chan chan *sync.WaitGroup){
+func (c *CERES)worker_main(odl *organizedDijkstraList, wg *sync.WaitGroup,
+	handle_chan chan *dijkstraPossibility, counter_chan chan *sync.WaitGroup,
+	now_empty_chan chan bool) {
 	if wg != nil {
-		defer wg.Done() // we are no longer counting
+		defer wg.Done()
 	}
+
 MAINLOOP:
 	for {
 		counter := <- counter_chan
 		select {
 		case poss := <- handle_chan:
-			poss.curP = ics.estimateP(poss)
-			list.put(poss)
-		case <-time.After(5*time.Second):
+			poss.curP = c.computeP(poss)
+			odl.put(poss)
+		case <-now_empty_chan:
+			// there are no handled
 			counter.Done()
 			continue MAINLOOP
 		}
 	}
 }
 
+func (c *CERES)parseOptions(w Word, handler chan *dijkstraPossibility,
+	cur *dijkstraPossibility, offset int) {
+	go func () {
+		for _, proposition := range c.pcs.proposeOptions(w, c.ctx) {
+			handler <- cur.makeChild(proposition, offset)
+		}
+	}()
+	go func () {
+		for _, proposition := range c.ics.proposeOption(w, c.ctx) {
+			handler <- cur.makeChild(proposition, offset)
+		}
+	}()
+}
 
-func (ics *ICS)evolve(cur *ics_DijkstraPossibility,
-	handler chan *ics_DijkstraPossibility) []*ics_DijkstraPossibility {
-	// generating all possible words
-	cur_tokens := cur.tokens_toAnalyse[0]
-	var word Word = cur_tokens[0]
-	var toAnalyse []Word = make([]Word, 0, len(cur_tokens))
-	for i := 0; i <len(cur_tokens)-1; i++ {
-		toAnalyse = append(toAnalyse, word)
-		word += " " + cur_tokens[i]
+func (c *CERES)evolve(cur *dijkstraPossibility,
+	handler chan *dijkstraPossibility, DoneWarner []chan bool){
+	// safety
+	if cur.analysedUntil == len(cur.tokens) {
+		panic(fmt.Errorf("Cannot evolve when there is no token to evolve onto"))
 	}
-	toAnalyse = append(toAnalyse, word)
-
-	var i int
-	searcher:
-	for i = 0; i<cap(cur.tokens_analysed); i++ {
-		for _,j := range cur.tokens_analysed {
-			if i == j {
-				continue searcher
+	// proper function
+	curTokenT := recognizeType(cur.tokens[cur.analysedUntil])
+	if curTokenT == TOKEN_TYPE_WORD {
+		w := Word(cur.tokens[cur.analysedUntil])
+		c.parseOptions(w, handler, cur, 1)
+		for j := cur.analysedUntil + 1; j < len(cur.tokens); j++ {
+			tokenT := recognizeType(cur.tokens[j])
+			if tokenT == TOKEN_TYPE_WORD {
+				c.parseOptions(w, handler, cur, j - cur.analysedUntil + 1)
+			} else {
+				break
 			}
 		}
-		break searcher
+	} else {
+		handler <- cur.makeChild(c.makeNonWordEntity(cur.tokens[cur.analysedUntil]), 1)
 	}
 
-	// generating all possible entities
-	for l, analysis := range toAnalyse {
-		cur.tokens_analysed = append(cur.tokens_analysed, i+l)
-		cur.tokens_toAnalyse[0] = cur.tokens_toAnalyse[0][i+l+1:]
-		if len(cur.tokens_toAnalyse[0]) == 0 {
-			cur.tokens_toAnalyse = cur.tokens_toAnalyse[1:]
-		}
-		if entry, ok := ics.entityDictionary[analysis]; ok {
-			entry.DEMutex.RLock()
-			for _, possibleEntity := range entry.entities {
-				idp := new(ics_DijkstraPossibility)
-				idp.tokens_analysed = make([]int, len(cur.tokens_analysed),
-					cap(cur.tokens_analysed))
-				copy(idp.tokens_analysed, cur.tokens_analysed)
-				idp.collapsedAnalysedSentence = utils.DeepCopy[positionTuple,
-																Entity](cur.collapsedAnalysedSentence)
-				pos := positionTuple{i:i, j:i+len(strings.Split(string(analysis), " "))}
-				idp.collapsedAnalysedSentence[pos] = possibleEntity
-				idp.tokens_toAnalyse = make([][]Word, len(cur.tokens_toAnalyse))
-				copy(idp.tokens_toAnalyse, cur.tokens_toAnalyse)
-				handler <- idp
-			}
-			entry.DEMutex.RUnlock()
-		}
+	for _, warner := range DoneWarner {
+		go func(){warner <- true}()
 	}
-	return nil
+}
+
+
+func (c *CERES)makeNonWordEntity(token string)RecognizedEntity {
+	// TODO: Split on token type, handle all cases.
+	return RecognizedEntity{}
 }

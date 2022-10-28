@@ -34,11 +34,34 @@ func (et *EntityType) directTypeOf() *EntityType{
     return et.parent
 }
 
+func (et *EntityType) GetNumber() int8 {
+    // TODO: solve this
+    return 0
+}
+
+func (et *EntityType) GetGender() int8 {
+    // TODO: solve this
+    return UNKNOWN
+}
+
+func (ei*EntityInstance)GetGender() int8 {
+    // FIXME: is this working always ? No. Check if there is a locally defined gender
+    return ei.directTypeOf().GetGender()
+}
+
+func (ei*EntityInstance)GetNumber() int8 {
+    // FIXME: Now create a group entity subtype
+    return SINGULAR
+}
+
+
 // interface entity is both EntityType and EntityInstance
 type Entity interface {
     directTypeOf() *EntityType
     Initialize()
     Equal(utils.Equalable) bool
+    GetNumber() int8
+    GetGender() int8
 }
 
 /*

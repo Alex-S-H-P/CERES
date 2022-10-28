@@ -67,3 +67,8 @@ func (ics*ICS)createEntityInstance(w Word, et *EntityType) *EntityInstance{
 
     return ei
 }
+
+func (ics*ICS)proposeOption(w Word, ctx *CTX) []RecognizedEntity{
+    // TODO: code this
+    return nil
+}
