@@ -62,4 +62,5 @@ func MakeRecognizedEntity(e Entity, p bool, a bool, pr proposer) RecognizedEntit
 
 type proposer interface {
     proposeOptions(Word, *CTX) []RecognizedEntity
+    computeP(RecognizedEntity, *CTX, ...RecognizedEntity) float64
 }

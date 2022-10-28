@@ -191,6 +191,17 @@ func (c *CERES)evolve(cur *dijkstraPossibility,
 
 
 func (c *CERES)makeNonWordEntity(token string)RecognizedEntity {
-	// TODO: Split on token type, handle all cases.
+	// TODO handle all cases.
+	switch recognizeType(token) {
+	case TOKEN_TYPE_PRIC:
+		// make a temporary price entity
+	case TOKEN_TYPE_CURR:
+		// replace with the currency's entity.
+	case TOKEN_TYPE_INTN, TOKEN_TYPE_NUMB:
+		// make temporary number entity
+	case TOKEN_TYPE_UNKN:
+		// fetch unknown. If failed make one.
+	}
+
 	return RecognizedEntity{}
 }

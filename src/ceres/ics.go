@@ -72,3 +72,9 @@ func (ics*ICS)proposeOption(w Word, ctx *CTX) []RecognizedEntity{
     // TODO: code this
     return nil
 }
+
+func (ics*ICS)computeP(re RecognizedEntity, ctx*CTX,
+        previous_elements ...RecognizedEntity) float64{
+    // TODO: code this
+    return 0.
+}

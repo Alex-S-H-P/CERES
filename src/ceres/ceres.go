@@ -52,6 +52,13 @@ func (c *CERES) createEntityInstance(w Word, et *EntityType) {
 
 
 func (c* CERES) computeP(idp *dijkstraPossibility) float64 {
-    // TODO: Do this
-    return 0.
+    var P float64 = 1
+    var past_entities []RecognizedEntity = make([]RecognizedEntity,
+        0, len(idp.analyseResult))
+    for _, re := range idp.analyseResult {
+        analyser := re.proposer
+        P *= analyser.computeP(re, c.ctx, past_entities...)
+        past_entities = append(past_entities, re)
+    }
+    return P
 }

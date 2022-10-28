@@ -90,3 +90,9 @@ func (pcs*PCS)proposeOptions(w Word, ctx *CTX) []RecognizedEntity {
         return nil
     }
 }
+
+func (pcs*PCS)computeP(re RecognizedEntity, ctx*CTX,
+        previous_elements ...RecognizedEntity) float64{
+            // TODO: fix this
+    return 0.
+}
