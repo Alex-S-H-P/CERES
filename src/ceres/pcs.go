@@ -94,4 +94,28 @@ func (pcs *PCS)IsPronoun(w Word) bool{
 func (pcs *PCS) Match(w Word) Entity{
     // TODO: do this
     return nil
+func (pcs*PCS)proposeOptions(w Word, ctx *CTX) []RecognizedEntity {
+    if pronoun, ok := pcs.pronounDictionary[w]; ok {
+        entities := make([]RecognizedEntity, 0, 64)
+        g, n, p := pronoun.GNP_Sep()
+        if p == PERSON1 && n == SINGULAR {
+            return []RecognizedEntity{MakeRecognizedEntity(ctx.SPEAKER,
+                    pronoun.Posessive, false)}
+        } else if p == PERSON2 {
+            return []RecognizedEntity{MakeRecognizedEntity(ctx.DESTINATOR,
+                 pronoun.Posessive, false)}
+        }
+        for i := 0; i<ctx.expressed_buffer.Len(); i++ {
+            buffered := ctx.expressed_buffer.Get(i)
+            if buffered.GetGender() == g || g == UNKNOWN || buffered.GetGender() == UNKNOWN {
+                if buffered.GetNumber() == n {
+                    entities = append(entities, MakeRecognizedEntity(buffered,
+                        pronoun.Posessive, false))
+                }
+            }
+        }
+        return entities
+    } else {
+        return nil
+    }
 }
