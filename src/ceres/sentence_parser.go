@@ -168,16 +168,38 @@ MAINLOOP:
 
 func (c *CERES)parseOptions(w Word, handler chan *dijkstraPossibility,
 	cur *dijkstraPossibility, offset int) {
+	var i int
+	var mutex, pm, im sync.Mutex
+	pm.Lock()
+	im.Lock()
 	go func () {
 		for _, proposition := range c.pcs.proposeOptions(w, c.ctx) {
+			fmt.Println("PCS : ", proposition)
 			handler <- cur.makeChild(proposition, offset)
+			mutex.Lock()
+			i ++
+			mutex.Unlock()
 		}
+		pm.Unlock()
 	}()
 	go func () {
 		for _, proposition := range c.ics.proposeOption(w, c.ctx) {
 			handler <- cur.makeChild(proposition, offset)
+			mutex.Lock()
+			i ++
+			mutex.Unlock()
 		}
+		im.Unlock()
 	}()
+	pm.Lock()
+	defer pm.Unlock()
+	im.Lock()
+	defer im.Unlock()
+
+	if i == 0 {
+		p := c.ucs.proposeOptions(w, c.ctx)[0]
+		handler <- cur.makeChild(p, offset)
+	}
 }
 
 func (c *CERES)evolve(cur *dijkstraPossibility,
