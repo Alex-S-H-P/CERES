@@ -110,6 +110,7 @@ func (c *CERES) dijkstra_main(odl *organizedDijkstraList,
 
 	wg.Add(c.sentence_analyser_workers)
 	for w_id := 0; w_id < c.sentence_analyser_workers; w_id++ {
+		fmt.Println(w_id, "worker")
 		counter_chan := make(chan *sync.WaitGroup)
 		counter_chans = append(counter_chans, counter_chan)
 		now_empty_chan := make(chan bool)
@@ -119,17 +120,25 @@ func (c *CERES) dijkstra_main(odl *organizedDijkstraList,
 
 	for {
 		candidate := odl.pop()
+		fmt.Println(candidate)
+		if candidate == nil {
+			fmt.Println("ERROR : empty list")
+			return nil
+		}
 		if candidate.completed() {
 			// this candidate is the best one
+			fmt.Println("candidate is completed !")
 			return candidate
 		} else  {
 			// we inform all workers
+			fmt.Println("Informing all workers")
 			counter := new(sync.WaitGroup)
 			counter.Add(c.sentence_analyser_workers)
 			for _, channel := range counter_chans {
 				channel <- counter
 			}
 			// we evolve the possibility
+			fmt.Println("Evolving the possibility")
 			c.evolve(candidate, handle_chan, now_empty_chans)
 			counter.Wait()
 		}
@@ -153,6 +162,7 @@ MAINLOOP:
 				select {
 				case poss := <- handle_chan:
 					poss.curP = c.computeP(poss)
+					fmt.Println("worker :", poss)
 					odl.put(poss)
 				case <-now_empty_chan:
 					counter.Done()
@@ -182,6 +192,7 @@ func (c *CERES)parseOptions(w Word, handler chan *dijkstraPossibility,
 	}()
 	go func () {
 		for _, proposition := range c.ics.proposeOption(w, c.ctx) {
+			fmt.Println("ICS : ", proposition)
 			handler <- cur.makeChild(proposition, offset)
 			mutex.Lock()
 			i ++
@@ -195,8 +206,11 @@ func (c *CERES)parseOptions(w Word, handler chan *dijkstraPossibility,
 	defer im.Unlock()
 
 	if i == 0 {
+		fmt.Println("i is 0. The word w wasn't recognized")
 		p := c.ucs.proposeOptions(w, c.ctx)[0]
+		fmt.Println("proposition :", p)
 		handler <- cur.makeChild(p, offset)
+		fmt.Println("sent !")
 	}
 }
 
@@ -209,6 +223,7 @@ func (c *CERES)evolve(cur *dijkstraPossibility,
 	// proper function
 	curTokenT := recognizeType(cur.tokens[cur.analysedUntil])
 	if curTokenT == TOKEN_TYPE_WORD {
+		fmt.Println("first token is a word")
 		w := Word(cur.tokens[cur.analysedUntil])
 		c.parseOptions(w, handler, cur, 1)
 		for j := cur.analysedUntil + 1; j < len(cur.tokens); j++ {
