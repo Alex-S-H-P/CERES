@@ -90,7 +90,11 @@ func (c *CERES)ParseSentence(sentence string)[]RecognizedEntity{
 		 tokens:tokens, analysedUntil:0})
 	 wg := new(sync.WaitGroup)
 
-	return c.dijkstra_main(odl, wg).analyseResult
+	if a := c.dijkstra_main(odl, wg); a != nil {
+		return a.analyseResult
+	} else {
+		return nil
+	}
 }
 
 func (c *CERES) dijkstra_main(odl *organizedDijkstraList,
