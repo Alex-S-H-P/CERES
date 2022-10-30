@@ -36,22 +36,22 @@ type organizedDijkstraList struct {
 }
 
 func (odl *organizedDijkstraList)pop() *dijkstraPossibility{
-	if odl.rwm.TryLock() {
-		odl.rwm.Lock()
-		defer odl.rwm.Unlock()
-	}
-	a := odl.list[0]
-	if len(odl.list) > 1 {
+	odl.rwm.Lock()
+	defer odl.rwm.Unlock()
+
+	if len(odl.list) > 0 {
+		a := odl.list[0]
 		odl.list = odl.list[1:]
+		return a
+	} else {
+		return nil
 	}
-	return a
 }
 
 func (odl *organizedDijkstraList)put(possibility *dijkstraPossibility) {
-	if odl.rwm.TryLock() {
-		odl.rwm.Lock()
-		defer odl.rwm.Unlock()
-	}
+	odl.rwm.Lock()
+	defer odl.rwm.Unlock()
+
 	i := odl.getRank(possibility.curP)
 	tmp := odl.list[i:]
 	odl.list = append(odl.list[:i], possibility)
