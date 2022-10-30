@@ -244,5 +244,9 @@ func (c *CERES)makeNonWordEntity(token string)RecognizedEntity {
 		// fetch unknown. If failed make one.
 	}
 
-	return RecognizedEntity{}
+	// FIXME: this code is temporary
+	ei := new(EntityInstance)
+
+	return RecognizedEntity{entity:ei,
+		possessive:false, attribute:false, proposer:&c.ucs}
 }
