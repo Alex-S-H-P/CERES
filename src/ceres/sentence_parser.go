@@ -4,7 +4,7 @@ import (
 	"fmt"
 	re "regexp"
 	"sync"
-
+	"time"
 	"CERES/src/utils"
 )
 
@@ -25,6 +25,7 @@ func (idp *dijkstraPossibility) makeChild(re RecognizedEntity, offset int) *dijk
 	child.analyseResult = append(make([]RecognizedEntity, 0, cap(idp.analyseResult)),
 				idp.analyseResult...)
 	child.analyseResult = append(child.analyseResult, re)
+	fmt.Println("CHILD :", child.analyseResult)
 	return child
 }
 
@@ -49,7 +50,10 @@ func (odl *organizedDijkstraList)pop() *dijkstraPossibility{
 }
 
 func (odl *organizedDijkstraList)put(possibility *dijkstraPossibility) {
+	fmt.Println("Putting", possibility, "into", *odl)
+	fmt.Println("lockable")
 	odl.rwm.Lock()
+	fmt.Println("-- locked")
 	defer odl.rwm.Unlock()
 
 	i := odl.getRank(possibility.curP)
@@ -143,15 +147,21 @@ func (c *CERES)worker_main(odl *organizedDijkstraList, wg *sync.WaitGroup,
 
 MAINLOOP:
 	for {
-		counter := <- counter_chan
 		select {
-		case poss := <- handle_chan:
-			poss.curP = c.computeP(poss)
-			odl.put(poss)
-		case <-now_empty_chan:
-			// there are no handled
-			counter.Done()
-			continue MAINLOOP
+		case <- time.After(3*time.Second):
+			break MAINLOOP
+		case counter := <- counter_chan:
+			for {
+				select {
+				case poss := <- handle_chan:
+					poss.curP = c.computeP(poss)
+					odl.put(poss)
+				case <-now_empty_chan:
+					counter.Done()
+					continue MAINLOOP
+				}
+				fmt.Println("put element.Now waiting for more")
+			}
 		}
 	}
 }
