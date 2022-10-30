@@ -118,9 +118,7 @@ func (c *CERES) dijkstra_main(odl *organizedDijkstraList,
 	}
 
 	for {
-		odl.rwm.Lock()
 		candidate := odl.pop()
-		odl.rwm.Unlock()
 		if candidate.completed() {
 			// this candidate is the best one
 			return candidate
