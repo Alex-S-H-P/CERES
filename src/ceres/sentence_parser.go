@@ -72,7 +72,12 @@ func (odl *organizedDijkstraList)getRank(P float64) int {
 	return b
 }
 
-func (odl *organizedDijkstraList)finished()bool {return odl.list[0].completed()}
+func (odl *organizedDijkstraList)finished()bool {
+	if len(odl.list) > 0 {
+		return odl.list[0].completed()
+	}
+	return true
+}
 
 func (c *CERES)ParseSentence(sentence string)[]RecognizedEntity{
 	tokens := RegexpToken.FindAllString(sentence, len(sentence)/2)
