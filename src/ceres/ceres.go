@@ -4,6 +4,7 @@ package ceres
 type CERES struct {
     ics ICS
     pcs PCS
+    ucs UCS
     ctx *CTX
 
     root *EntityType
@@ -19,14 +20,17 @@ func (c *CERES)Initialize(workers int){
     c.ics.Initialize(c)
     c.pcs = PCS{}
     c.pcs.Initialize()
+    c.ucs = UCS{}
+    c.ucs.Initialize()
     c.ctx = new(CTX)
     c.ctx.Initialize()
 
     c.sentence_analyser_workers = 1
 
     c.createEntityType("entity")
-
     c.initialized = true
+
+    c.ucs.ceres_main = c.root
 }
 
 /*
