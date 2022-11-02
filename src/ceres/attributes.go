@@ -7,7 +7,7 @@ type AttributeTypeList struct {
 
 type AttributeInstanceList struct {
     attrs []*EntityType
-    values map[EntityType]Word
+    values map[*EntityType]Word
 }
 
 
