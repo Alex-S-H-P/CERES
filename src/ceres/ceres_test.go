@@ -115,3 +115,25 @@ func TestSentenceParser(t *testing.T){
 
     c.ParseSentence("hello, I am alexandre")
 }
+
+const fileSpace = "test.ceres"
+
+func TestCERES_Saving(t *testing.T) {
+    c := new(CERES)
+    c.Initialize(1)
+    c.createEntityType("caracteristic")
+    c.createEntityType("action")
+    c.createEntityType("thing")
+    c.save(fileSpace)
+
+    c2 := new(CERES)
+    c2.Initialize(1)
+    e := c2.load(fileSpace)
+    if e != nil {
+        t.Error(e)
+    }
+    if len(*c.root.children) != len(*c2.root.children) {
+        t.Fail()
+    }
+
+}
