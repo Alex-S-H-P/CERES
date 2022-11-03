@@ -7,7 +7,12 @@ import (
 	"strings"
 )
 
-const sto_fmt_split = "␞"
+const (
+	sto_fmt_split = "␞"
+	UnderSEP = "␣"
+	UnitSEP  = "␟"
+)
+
 const storage_format string = "%s" + sto_fmt_split + "%s" + sto_fmt_split +
 	"%s" + sto_fmt_split + "%s" + sto_fmt_split + "%d\n"
 
@@ -49,9 +54,9 @@ Should not run while any other goroutine has access to the ICS.
 func (ics*ICS)load(b1,b2 *[]byte){
 	// setting b2
 	m := make(map[int]Entity)
-	C := strings.Split(string(*b2), "␟")
+	C := strings.Split(string(*b2), UnitSEP)
 	for _, descr := range C {
-		c := strings.Split(descr, "␣")
+		c := strings.Split(descr, UnderSEP)
 		index, err := strconv.Atoi(c[1])
 		if err != nil {
 			panic(err)
@@ -100,7 +105,7 @@ func (ics*ICS)load(b1,b2 *[]byte){
 	}
 	// b2 set
 	// setting b1
-	B := strings.Split(string(*b1), "␟")
+	B := strings.Split(string(*b1), UnitSEP)
 	for _, b := range B {
 		b_ := strings.Split(b, "⚯")
 		index, err := strconv.Atoi(b_[1])
@@ -128,7 +133,7 @@ func (pcs*PCS)load(b*[]byte){
 		return
 	}
 
-	C := strings.Split(string(*b), "␣")
+	C := strings.Split(string(*b), UnderSEP)
 	fmt.Println(C, b, len(C), len(*b))
 	for _, c := range C {
 		fmt.Println("LOADING PCS", c)
@@ -146,7 +151,7 @@ func (pcs*PCS)load(b*[]byte){
 }
 
 func (ucs*UCS)load(b*[]byte){
-	C := strings.Split(string(*b), "␣")
+	C := strings.Split(string(*b), UnderSEP)
 	ucs.unrecognized_words = make([]Word, 0, len(C))
 	for _, c := range C {
 		ucs.unrecognized_words = append(ucs.unrecognized_words, Word(c))
@@ -250,7 +255,7 @@ func (ics *ICS) save() ([]byte, []byte, error) {
 	for w, entries := range ics.entityDictionary {
 		fmt.Println("entry [\""+string(w)+"\"]->", entries)
 		if !initial {
-			b1 = append(b1, []byte("␟")...)
+			b1 = append(b1, []byte(UnitSEP)...)
 		}
 		initial = false
 		var first bool = true
@@ -278,7 +283,7 @@ func (pcs *PCS) save() ([]byte, error) {
 	for w, pronoun := range pcs.pronounDictionary {
 		var s, t string
 		if !first {
-			s = "␣"
+			s = UnderSEP
 		}
 		switch {
 		case pronoun.Posessive && pronoun.Adjective:
@@ -303,7 +308,7 @@ func (ucs *UCS) save() ([]byte, error) {
 	for _, w := range ucs.unrecognized_words {
 		if len(string(w)) > 0 {
 			if !first {
-				b = append(b, []byte("␣")...)
+				b = append(b, []byte(UnderSEP)...)
 			}
 			b = append(b, []byte(w)...)
 			fmt.Println(string(b))
