@@ -121,6 +121,9 @@ func LevelsOfAbstractionBetween(e, f Entity) (int, error) {
 }
 
 func (et *EntityType)addChild(e Entity) {
+    if et.children == nil {
+        et.children = new([]Entity)
+    }
     switch e.(type) {
     case *EntityType:
         et2 := e.(*EntityType)
