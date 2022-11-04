@@ -78,12 +78,24 @@ func (ics*ICS)load(b1,b2 *[]byte){
 			}
 			e = Entity(et)
 			et.attributes = new(AttributeTypeList)
+			var parsing_surroundings = false
 			for i := 3; i<len(c); i++ {
-				Cidx, err := strconv.Atoi(c[i])
-				if err != nil {
-					panic(err)
+				switch {
+				case c[i] == "surr":
+					parsing_surroundings = true
+				case !parsing_surroundings:
+					Cidx, err := strconv.Atoi(c[i])
+					if err != nil {
+						panic(err)
+					}
+					et.attributes.attrs = append(et.attributes.attrs, m[Cidx].(*EntityType))
+				default:
+					var newEl = new(surrounding)
+					newEl.load(c[i], m)
+					et.surroundingList.rwm.Lock()
+					et.surroundingList.surr = append(et.surroundingList.surr, newEl)
+					et.surroundingList.rwm.Unlock()
 				}
-				et.attributes.attrs = append(et.attributes.attrs, m[Cidx].(*EntityType))
 			}
 		case "inst":
 			ei := new(EntityInstance)
@@ -220,13 +232,21 @@ func safeIndexEntity(e Entity, m map[Entity]int, entityDict *[]byte) int {
 			fmt.Println("Indexing", *et, "...")
 			if et.parent != nil {
 				s = "␟type␣" + strconv.Itoa(i) + "␣" +
-					strconv.Itoa(safeIndexEntity(et.parent, m, entityDict)) + "␣"
+					strconv.Itoa(safeIndexEntity(et.parent, m, entityDict)) + UnderSEP
 			} else {
 				s = "␟type␣" + strconv.Itoa(i) + "␣-1␣"
 			}
 			for _, attr := range et.attributes.attrs {
 				fmt.Println("Attr ::", attr)
-				s += strconv.Itoa(safeIndexEntity(attr, m, entityDict)) + "␣"
+				s += strconv.Itoa(safeIndexEntity(attr, m, entityDict)) + UnderSEP
+			}
+			if len(et.surroundingList.surr) > 0 {
+				s += UnderSEP
+				s += "surr"
+				for _, el := range et.surroundingList.surr {
+					s += UnderSEP
+					s += string(el.save(m))
+				}
 			}
 		case *EntityInstance:
 			ei := e.(*EntityInstance)
@@ -281,6 +301,7 @@ func (pcs *PCS) save() ([]byte, error) {
 	b := make([]byte, 0, 32*len(pcs.pronounDictionary))
 	var first bool = true
 	for w, pronoun := range pcs.pronounDictionary {
+
 		var s, t string
 		if !first {
 			s = UnderSEP

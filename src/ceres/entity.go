@@ -10,6 +10,7 @@ type EntityType struct {
     parent *EntityType
     attributes *AttributeTypeList
     children *[]Entity
+    surroundingList surroundingList
 }
 
 func (et *EntityType)Initialize() {
@@ -71,7 +72,7 @@ There can be intermediate types between the two
 func IsTypeOf(e Entity, t *EntityType) bool {
     if e.directTypeOf() == nil {
         return false
-    } else if *e.directTypeOf() == *t {
+    } else if e.directTypeOf().Equal(t) {
         return true
     } else {
         return IsTypeOf(e.directTypeOf(), t)
@@ -79,7 +80,7 @@ func IsTypeOf(e Entity, t *EntityType) bool {
 }
 
 func lAB_internal(e *EntityType, f Entity) (int, error) {
-    if F, ok := f.(*EntityType); ok && *e == *F{
+    if F, ok := f.(*EntityType); ok && e.Equal(F){
         return 0, nil
     } else if f.directTypeOf() != nil {
         i, e := lAB_internal(e, f.directTypeOf())
