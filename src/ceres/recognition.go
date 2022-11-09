@@ -132,6 +132,7 @@ func (rn *RecognitionNode)shape(current*RecognizedEntity,
 
     for _, curSurrounding := range current.surroundings().surr {
 
+        fmt.Println(">> there are", len(curSurrounding.prox), "tokens to be parsed")
         var start_index_on_lookup, end_index_on_lookup int = 0, len(before)
         var is_looking_before bool = true
 
@@ -143,12 +144,15 @@ func (rn *RecognitionNode)shape(current*RecognizedEntity,
         var CurRnCpyScore float64 = 1.
         CurRnCpy.Content = rn.Content
         CurRnCpy.Parent = rn.Parent
+        fmt.Println("current copy :", CurRnCpy.Content.s, CurRnCpy.LeftChildren, CurRnCpy.RightChildren)
 
         // filling the copy with the analysis of the
         for _, prox := range curSurrounding.prox {
             var prox_beta float64 = prox.pMissing
             var bestSubTree *RecognitionTree
             var offset int
+
+            fmt.Println("SEARCHING a match of", prox, "for surrounding", curSurrounding, " : ", current.s)
 
             var ents []*RecognizedEntity = before
             if ! is_looking_before {
@@ -167,6 +171,15 @@ func (rn *RecognitionNode)shape(current*RecognizedEntity,
                     childNode := new(RecognitionNode)
                     childNode.Parent = rn
                     childNode.Content = re
+                    if rn != nil {
+                        if rn.Content == nil {
+                            fmt.Println("Making child node from \"\" on", re.s)
+                        } else {
+                            fmt.Println("Making child node from", rn.Content.s, "on", re.s)
+                        }
+                    } else {
+                        fmt.Println("Making child node from", nil, "on", re.s)
+                    }
 
                     var subtree *RecognitionTree
 
@@ -182,13 +195,15 @@ func (rn *RecognitionNode)shape(current*RecognizedEntity,
                             prox_beta)
                     }
 
+                    fmt.Println("beta :", beta, "|  P :", subtree.curCoherence)
+
                     if prox_beta < subtree.curCoherence {
                         prox_beta = subtree.curCoherence
                         bestSubTree = subtree
                         offset = subtree.Root[0].NbOnTheRight() + 1
                     }
                 } else {
-                    fmt.Println(re, "does not match.")
+                    fmt.Println(re.entity, "does not match.", prox.stype)
                 }
             } // best bestSubTree found
             start_index_on_lookup += offset
@@ -205,6 +220,8 @@ func (rn *RecognitionNode)shape(current*RecognizedEntity,
             } else {
                 CurRnCpyScore *= prox.pMissing
             }
+            fmt.Println("cur:", len(CurRnCpy.LeftChildren), len(CurRnCpy.RightChildren),
+                        cap(CurRnCpy.LeftChildren), cap(CurRnCpy.RightChildren))
         }
 
         // maximise surrounding coherence
@@ -212,14 +229,20 @@ func (rn *RecognitionNode)shape(current*RecognizedEntity,
             BestRnCpy = CurRnCpy
             BestRnCpyScore = CurRnCpyScore
         }
+        fmt.Println("best:", len(BestRnCpy.LeftChildren), len(BestRnCpy.RightChildren),
+                    cap(BestRnCpy.LeftChildren), cap(BestRnCpy.RightChildren))
     }
 
     if BestRnCpy != nil {
+        fmt.Println("best copy :", BestRnCpy.Content.s, BestRnCpy.LeftChildren, BestRnCpy.RightChildren)
+        fmt.Println(len(BestRnCpy.LeftChildren), len(BestRnCpy.RightChildren),
+                    cap(BestRnCpy.LeftChildren), cap(BestRnCpy.RightChildren))
         copy(rn.LeftChildren, BestRnCpy.LeftChildren)
         copy(rn.RightChildren, BestRnCpy.RightChildren)
+        fmt.Println("copied into :", rn.Content.s, rn.LeftChildren, rn.RightChildren)
     }
 
     answerTree.Root = []*RecognitionNode{rn}
-    // TODO: make the subtree and mix the subtree
+    fmt.Println("node from left/right", rn.LeftChildren, rn.RightChildren)
     return answerTree
 }
