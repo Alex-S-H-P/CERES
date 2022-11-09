@@ -12,6 +12,7 @@ type RecognizedEntity struct {
     possessive  bool
     attribute   bool
     proposer    proposer
+    s string
 }
 
 /*
@@ -62,8 +63,8 @@ func recognizeType(token string) tokenT{
     return TOKEN_TYPE_CURR
 }
 
-func MakeRecognizedEntity(e Entity, p bool, a bool, pr proposer) RecognizedEntity{
-    return RecognizedEntity{entity:e, possessive:p, attribute:a, proposer:pr}
+func MakeRecognizedEntity(e Entity, p bool, a bool, pr proposer, s string) RecognizedEntity{
+    return RecognizedEntity{entity:e, possessive:p, attribute:a, proposer:pr, s:s}
 }
 
 func (re*RecognizedEntity) surroundings() *surroundingList {
@@ -125,9 +126,9 @@ func (rn *RecognitionNode)shape(current*RecognizedEntity,
 
     var answerTree = new(RecognitionTree)
 
-
     var BestRnCpy *RecognitionNode = nil
     var BestRnCpyScore float64 = -1.
+
 
     for _, curSurrounding := range current.surroundings().surr {
 

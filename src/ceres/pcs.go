@@ -71,17 +71,17 @@ func (pcs*PCS)proposeOptions(w Word, ctx *CTX) []RecognizedEntity {
         g, n, p := pronoun.GNP_Sep()
         if p == PERSON1 && n == SINGULAR {
             return []RecognizedEntity{MakeRecognizedEntity(ctx.SPEAKER,
-                    pronoun.Posessive, false, pcs)}
+                    pronoun.Posessive, false, pcs, string(w))}
         } else if p == PERSON2 {
             return []RecognizedEntity{MakeRecognizedEntity(ctx.DESTINATOR,
-                 pronoun.Posessive, false, pcs)}
+                 pronoun.Posessive, false, pcs, string(w))}
         }
         for i := 0; i<ctx.expressed_buffer.Len(); i++ {
             buffered := ctx.expressed_buffer.Get(i)
             if buffered.GetGender() == g || g == UNKNOWN || buffered.GetGender() == UNKNOWN {
                 if buffered.GetNumber() == n {
                     entities = append(entities, MakeRecognizedEntity(buffered,
-                        pronoun.Posessive, false, pcs))
+                        pronoun.Posessive, false, pcs, string(w)))
                 }
             }
         }

@@ -27,7 +27,7 @@ func (ucs*UCS)proposeOptions(w Word, ctx*CTX) []RecognizedEntity {
 
     ei := new(EntityInstance)
     ei.typeOf = ucs.ceres_main
-    re := MakeRecognizedEntity(ei, false, false, ucs)
+    re := MakeRecognizedEntity(ei, false, false, ucs, string(w))
 
     ucs.uwm.Lock()
     ucs.unrecognized_words = append(ucs.unrecognized_words, w)
