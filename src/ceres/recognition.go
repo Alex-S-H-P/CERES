@@ -3,6 +3,8 @@ package ceres
 import (
     "CERES/src/utils"
     re "regexp"
+
+    "fmt"
 )
 
 type RecognizedEntity struct {
@@ -76,4 +78,145 @@ func (re*RecognizedEntity) surroundings() *surroundingList {
 type proposer interface {
     proposeOptions(Word, *CTX) []RecognizedEntity
     computeP(RecognizedEntity, *CTX, ...RecognizedEntity) float64
+}
+
+type RecognitionNode struct {
+    Parent *RecognitionNode
+    Content *RecognizedEntity
+
+    LeftChildren  []*RecognitionNode // these one should be for the possibility to be considered.
+    RightChildren []*RecognitionNode // these one shouldn't
+}
+
+func (rn*RecognitionNode) NbChildren() int {
+    s := 1
+    for _, child := range rn.LeftChildren {
+        s += child.NbChildren()
+    }
+    for _, child := range rn.RightChildren {
+        s += child.NbChildren()
+    }
+    return s
+}
+
+func (rn*RecognitionNode) NbOnTheRight() int {
+    var s int
+    for _, child := range rn.RightChildren {
+        s += child.NbOnTheRight() + 1
+    }
+    return s
+}
+
+type RecognitionTree struct {
+    Root []*RecognitionNode
+
+    contents []*RecognizedEntity
+    curCoherence float64
+}
+
+
+/*
+tries to find a tree structure that matches having this node as its root.
+Since this function is used recursively,
+we pass along a beta value to know what to miss
+*/
+func (rn *RecognitionNode)shape(current*RecognizedEntity,
+    before, after []*RecognizedEntity, beta float64) *RecognitionTree{
+
+    var answerTree = new(RecognitionTree)
+
+
+    var BestRnCpy *RecognitionNode = nil
+    var BestRnCpyScore float64 = -1.
+
+    for _, curSurrounding := range current.surroundings().surr {
+
+        var start_index_on_lookup, end_index_on_lookup int = 0, len(before)
+        var is_looking_before bool = true
+
+        if curSurrounding.coherence < beta {
+            continue
+        }
+        // copying rn
+        var CurRnCpy *RecognitionNode = new(RecognitionNode)
+        var CurRnCpyScore float64 = 1.
+        CurRnCpy.Content = rn.Content
+        CurRnCpy.Parent = rn.Parent
+
+        // filling the copy with the analysis of the
+        for _, prox := range curSurrounding.prox {
+            var prox_beta float64 = prox.pMissing
+            var bestSubTree *RecognitionTree
+            var offset int
+
+            var ents []*RecognizedEntity = before
+            if ! is_looking_before {
+                ents = after
+            } else if prox.pos > 0 {
+                is_looking_before = false
+                ents = after
+                start_index_on_lookup = 0
+                end_index_on_lookup = len(after)
+            }
+
+            for i, re := range ents[start_index_on_lookup:end_index_on_lookup]{
+                if IsTypeOf(re, prox.stype) {
+                    childNode := new(RecognitionNode)
+                    childNode.Parent = rn
+                    childNode.Content = re
+
+                    var subtree *RecognitionTree
+
+                    if i < end_index_on_lookup - 1 {
+                        subtree = childNode.shape(re,
+                            ents[start_index_on_lookup:i],
+                            ents[i+1:end_index_on_lookup],
+                            prox_beta)
+                    } else {
+                        subtree = childNode.shape(re,
+                            ents[start_index_on_lookup:i],
+                            nil,
+                            prox_beta)
+                    }
+
+                    if prox_beta < subtree.curCoherence {
+                        prox_beta = subtree.curCoherence
+                        bestSubTree = subtree
+                        offset = subtree.Root[0].NbOnTheRight() + 1
+                    }
+                } else {
+                    fmt.Println(re, "does not match.")
+                }
+            } // best bestSubTree found
+            start_index_on_lookup += offset
+
+            if bestSubTree !=  nil {
+                if is_looking_before {
+                    CurRnCpy.LeftChildren = append(CurRnCpy.LeftChildren,
+                        bestSubTree.Root[0])
+                } else {
+                    CurRnCpy.RightChildren = append(CurRnCpy.RightChildren,
+                        bestSubTree.Root[0])
+                }
+                CurRnCpyScore *= bestSubTree.curCoherence
+            } else {
+                CurRnCpyScore *= prox.pMissing
+            }
+        }
+
+        // maximise surrounding coherence
+        if BestRnCpyScore < CurRnCpyScore {
+            BestRnCpy = CurRnCpy
+            BestRnCpyScore = CurRnCpyScore
+        }
+    }
+
+    if BestRnCpy != nil {
+        copy(rn.LeftChildren, BestRnCpy.LeftChildren)
+        copy(rn.RightChildren, BestRnCpy.RightChildren)
+    }
+
+    answerTree.Root = []*RecognitionNode{rn}
+    // TODO: make the subtree and mix the subtree
+    return answerTree
 }
