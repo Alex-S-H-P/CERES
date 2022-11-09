@@ -64,6 +64,15 @@ func MakeRecognizedEntity(e Entity, p bool, a bool, pr proposer) RecognizedEntit
     return RecognizedEntity{entity:e, possessive:p, attribute:a, proposer:pr}
 }
 
+func (re*RecognizedEntity) surroundings() *surroundingList {
+    switch re.entity.(type) {
+    case *EntityType:
+        return &re.entity.(*EntityType).surroundingList
+    default:
+        return &re.entity.directTypeOf().surroundingList
+    }
+}
+
 type proposer interface {
     proposeOptions(Word, *CTX) []RecognizedEntity
     computeP(RecognizedEntity, *CTX, ...RecognizedEntity) float64
