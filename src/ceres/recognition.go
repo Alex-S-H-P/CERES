@@ -31,6 +31,10 @@ func (re *RecognizedEntity) Equal(other utils.Equalable) bool {
     return re.entity.Equal(other)
 }
 
+func (re *RecognizedEntity) GetNumber() int8 {return re.entity.GetNumber()}
+
+func (re *RecognizedEntity) GetGender() int8 {return re.entity.GetGender()}
+
 type tokenT uint8
 
 const (
