@@ -237,9 +237,16 @@ func (rn *RecognitionNode)shape(current*RecognizedEntity,
         fmt.Println("best copy :", BestRnCpy.Content.s, BestRnCpy.LeftChildren, BestRnCpy.RightChildren)
         fmt.Println(len(BestRnCpy.LeftChildren), len(BestRnCpy.RightChildren),
                     cap(BestRnCpy.LeftChildren), cap(BestRnCpy.RightChildren))
+        rn.LeftChildren = make([]*RecognitionNode, len(BestRnCpy.LeftChildren))
+        rn.RightChildren = make([]*RecognitionNode, len(BestRnCpy.RightChildren))//*/
         copy(rn.LeftChildren, BestRnCpy.LeftChildren)
         copy(rn.RightChildren, BestRnCpy.RightChildren)
         fmt.Println("copied into :", rn.Content.s, rn.LeftChildren, rn.RightChildren)
+        answerTree.curCoherence = BestRnCpyScore
+    } else {
+        rn.LeftChildren = nil
+        rn.RightChildren = nil
+        answerTree.curCoherence = 1.
     }
 
     answerTree.Root = []*RecognitionNode{rn}
