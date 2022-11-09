@@ -51,7 +51,7 @@ func (sl*surroundingList)Get(i int)*surrounding{
 }
 
 type surrounding struct {
-    prox []surroundingToken
+    prox []surroundingToken // by order of appearance
     coherence float64
 }
 
@@ -95,4 +95,6 @@ func (s*surrounding)load(b string, m map[int]Entity){
 type surroundingToken struct {
     stype *EntityType
     pos  int
+
+    pMissing float64
 }
