@@ -160,7 +160,9 @@ func (rn *RecognitionNode)shape(current*RecognizedEntity,
             }
 
             for i, re := range ents[start_index_on_lookup:end_index_on_lookup]{
-                if IsTypeOf(re, prox.stype) {
+                fmt.Println("Looking at", re.s)
+                if IsTypeOf(re, prox.stype) || re.Equal(prox.stype){
+                    fmt.Println(re.entity, "DOES match.", prox.stype, "(", re.s, ")")
                     childNode := new(RecognitionNode)
                     childNode.Parent = rn
                     childNode.Content = re
