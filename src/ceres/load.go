@@ -229,7 +229,7 @@ func safeIndexEntity(e Entity, m map[Entity]int, entityDict *[]byte) int {
 		switch e.(type) {
 		case *EntityType:
 			et := e.(*EntityType)
-			fmt.Println("Indexing", *et, "...")
+			fmt.Println("Indexing", et, "...")
 			if et.parent != nil {
 				s = "␟type␣" + strconv.Itoa(i) + "␣" +
 					strconv.Itoa(safeIndexEntity(et.parent, m, entityDict)) + UnderSEP

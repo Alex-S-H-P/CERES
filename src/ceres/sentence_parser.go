@@ -50,7 +50,7 @@ func (odl *organizedDijkstraList)pop() *dijkstraPossibility{
 }
 
 func (odl *organizedDijkstraList)put(possibility *dijkstraPossibility) {
-	fmt.Println("Putting", possibility, "into", *odl)
+	fmt.Println("Putting", possibility, "into", odl.list)
 	fmt.Println("lockable")
 	odl.rwm.Lock()
 	fmt.Println("-- locked")
