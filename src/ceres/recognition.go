@@ -167,14 +167,14 @@ func (rn *RecognitionNode)shape(current*RecognizedEntity,
 
                     var subtree *RecognitionTree
 
-                    if i < end_index_on_lookup - 1 {
+                    if i+start_index_on_lookup < end_index_on_lookup - 1 {
                         subtree = childNode.shape(re,
-                            ents[start_index_on_lookup:i],
-                            ents[i+1:end_index_on_lookup],
+                            ents[start_index_on_lookup:i+start_index_on_lookup],
+                            ents[i+1+start_index_on_lookup:end_index_on_lookup],
                             prox_beta)
                     } else {
                         subtree = childNode.shape(re,
-                            ents[start_index_on_lookup:i],
+                            ents[start_index_on_lookup:i+start_index_on_lookup],
                             nil,
                             prox_beta)
                     }
