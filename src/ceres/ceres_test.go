@@ -2,7 +2,7 @@ package ceres
 
 import (
     "testing"
-
+    "fmt"
 )
 
 func TestCERES_Initialization(t*testing.T){
@@ -135,5 +135,69 @@ func TestCERES_Saving(t *testing.T) {
     if len(*c.root.children) != len(*c2.root.children) {
         t.Fail()
     }
+}
 
+func setSurrounding(parent, child *EntityType, pos int) {
+    proxes := parent.surroundingList.surr[0].prox
+    token := surroundingToken{stype:child, pos:pos, pMissing:0.}
+    proxes = append(proxes, token)
+    parent.surroundingList.surr[0].prox = proxes
+}
+
+func TestShaper(t *testing.T) {
+    var At, Bt, Ct *EntityType = new(EntityType),
+        new(EntityType), new(EntityType)
+    var Ar, Br, Cr RecognizedEntity = MakeRecognizedEntity(At, false, false, nil, "A"),
+        MakeRecognizedEntity(Bt, false, false, nil, "B"),
+        MakeRecognizedEntity(Ct, false, false, nil, "C")
+
+    var recog = [3]*EntityType{At, Bt, Ct}
+    var rrecog = [3]*RecognizedEntity{&Ar, &Br, &Cr}
+
+    var idTransformation = [3][3]int {[3]int{0, 2, 1}, [3]int{2, 1, 0}, [3]int{1, 0, 2}}
+
+    for root_id, root := range recog {
+        for desc_id, desc := range recog {
+
+            fmt.Println("----------------Conf : ", root_id, ":",
+                desc_id, "----------------")
+            // reboots the surroundingList
+            for _, rebootable := range recog {
+                rebootable.surroundingList = surroundingList{surr : make([]*surrounding, 1)}
+                rebootable.surroundingList.surr[0] = new(surrounding)
+                rebootable.surroundingList.surr[0].coherence = 1
+            }
+            // setting the tree-like structure
+            if desc_id == root_id {
+                for child_id, child := range recog {
+                    if child_id == desc_id {
+                        continue
+                    }
+                    setSurrounding(root, child, child_id - desc_id)
+                }
+            } else {
+                middle_id := idTransformation[root_id][desc_id]
+                middle := recog[middle_id]
+
+                setSurrounding(root, middle, middle_id - root_id)
+                setSurrounding(middle, desc, desc_id - middle_id)
+
+                if desc_id + middle_id == 2 {
+                    continue
+                }
+            }
+            var before, after []*RecognizedEntity = rrecog[0:root_id], rrecog[root_id+1:3]
+
+            fmt.Println("prox :", root.surroundingList.surr[0].prox)
+
+            // testing
+            var rn = new(RecognitionNode)
+            rn.Content = rrecog[root_id]
+            tree := rn.shape(rrecog[root_id], before, after, 0.)
+            if tree.Root[0].NbChildren() != 3 {
+                t.Error("Tree does not contain 3 but", tree.Root[0].NbChildren(), "nodes.")
+                return
+            }
+        }
+    }
 }
