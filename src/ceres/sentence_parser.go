@@ -239,7 +239,7 @@ func (c *CERES)evolve(cur *dijkstraPossibility,
 	}
 
 	for _, warner := range DoneWarner {
-		go func(){warner <- true}()
+		go func(warner chan bool){warner <- true}(warner)
 	}
 }
 
