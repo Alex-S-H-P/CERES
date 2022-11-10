@@ -191,7 +191,7 @@ func (c *CERES)parseOptions(w Word, handler chan *dijkstraPossibility,
 		pm.Unlock()
 	}()
 	go func () {
-		for _, proposition := range c.ics.proposeOption(w, c.ctx) {
+		for _, proposition := range c.ics.proposeOptions(w, c.ctx) {
 			fmt.Println("ICS : ", proposition)
 			handler <- cur.makeChild(proposition, offset)
 			mutex.Lock()
