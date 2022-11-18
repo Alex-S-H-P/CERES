@@ -2,7 +2,7 @@ package ceres
 
 import (
     "testing"
-    "fmt"
+    //"fmt"
 )
 
 func TestCERES_Initialization(t*testing.T){
@@ -143,7 +143,7 @@ func setSurrounding(parent, child *EntityType, pos int) {
     proxes = append(proxes, token)
     parent.surroundingList.surr[0].prox = proxes
 }
-
+/*
 func TestShaper(t *testing.T) {
     var At, Bt, Ct *EntityType = new(EntityType),
         new(EntityType), new(EntityType)
@@ -201,3 +201,4 @@ func TestShaper(t *testing.T) {
         }
     }
 }
+//*/
