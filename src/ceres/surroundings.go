@@ -53,6 +53,8 @@ func (sl*surroundingList)Get(i int)*surrounding{
 type surrounding struct {
     prox []surroundingToken // by order of appearance
     coherence float64
+    maxPos int
+    minPos int
 }
 
 func (s*surrounding)save(m map[Entity]int)[]byte{
@@ -80,14 +82,25 @@ func (s*surrounding)load(b string, m map[int]Entity){
     parts := strings.Split(b[8:], ":")
     for i:=0; i <len(parts); i+=2 {
         token := new(surroundingToken)
+
         // stype
         idx, err := strconv.Atoi(parts[i])
         if err != nil {panic(err)}
         token.stype = m[idx].(*EntityType)
-        // pos
+
+        // find pos
         pos, err := strconv.Atoi(parts[i+1])
         if err != nil {panic(err)}
+
+        // set prox position
         token.pos = pos
+        if pos > s.maxPos {
+            s.maxPos = pos
+        }
+        if pos < s.minPos {
+            s.minPos = pos
+        }
+        // add prox
         s.prox = append(s.prox,*token)
     }
 }
