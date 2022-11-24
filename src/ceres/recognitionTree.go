@@ -81,8 +81,9 @@ func (rn *recognitionNode) copy() *recognitionNode{
     copy.tangler = rn.tangler
     copy.Surround = rn.Surround
     for k, v := range rn.ChildMap {
-        copy.ChildMap[k] = v.copy()
-        v.parent = copy // we fix the links.
+        v_copy := v.copy()
+        copy.ChildMap[k] = v_copy
+        v_copy.parent = copy // we fix the links.
     }
     return copy
 }
@@ -285,12 +286,23 @@ func (rn*recognitionNode) Add (re *RecognizedEntity) ([]*entangledRecognitionNod
     return answer, true
 }
 
+/*
+Considers adding the recognized entities to all possible interpretations of the ern
+
+Also tries to canibalize descendants directly between ern's content and re (in the sentence) as children of re
+
+Acts recursively. No matter whether we can add to this ern, tries adding to all its descendants.
+*/
 func (ern*entangledRecognitionNode) Add(re *RecognizedEntity) {
     for _, possibility := range ern.nodes() {
         if erns, ok := possibility.Add(re); ok {
             for _, child := range erns{
-                possibility.copy().try_unspooling_children(child) //
+                possibility.copy().try_unspooling_children(child)
             }
+        }
+        if right_children := possibility.children_on_the_right(); len(right_children) > 0 {
+            rightmost_child := right_children[len(right_children)-1]
+            rightmost_child.Add(re)
         }
     }
 }
