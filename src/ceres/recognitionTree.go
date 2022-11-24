@@ -3,7 +3,7 @@ package ceres
 type entangledRecognitionNode struct {
     possibilities map[*surrounding][]*recognitionNode
     Content  *RecognizedEntity
-    parent   *recognitionNode
+    parent   entangledRecognitionParent
 }
 
 func (ern*entangledRecognitionNode)copy() *entangledRecognitionNode {
@@ -321,9 +321,47 @@ func (s*surrounding)MatchLeft(e Entity)[]int {
 
 type RecognitionTree struct {
     roots []*entangledRecognitionNode
-
+    master *EntangledRecognitionForest
 }
 
 func (rt*RecognitionTree) Add(re *RecognizedEntity) {
+    /*
+    Could re make for a good parent ?
+    */
+}
 
+func (rt*RecognitionTree) remove(ern*entangledRecognitionNode) {
+    for i, root := range rt.roots {
+        if root == ern {
+            if i == len(rt.roots) - 1 {
+                rt.roots = rt.roots[:i]
+            } else {
+                rt.roots = append(rt.roots[:i], rt.roots[i+1:]...)
+            }
+            if len(rt.roots) == 0 {
+                rt.master.remove(rt)
+            }
+            return
+        }
+    }
+}
+
+
+type entangledRecognitionParent interface {
+    remove(*entangledRecognitionNode)
+}
+
+type EntangledRecognitionForest []*RecognitionTree
+
+func (erf*EntangledRecognitionForest) remove(rt *RecognitionTree) {
+    for i, cur_rt := range *erf {
+        if rt == cur_rt {
+            if i == len(rt.roots) - 1 {
+                *erf = (*erf)[:i]
+            } else {
+                *erf = append((*erf)[:i], (*erf)[i+1:]...)
+            }
+            return
+        }
+    }
 }
