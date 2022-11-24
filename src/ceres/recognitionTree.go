@@ -324,9 +324,21 @@ type RecognitionTree struct {
     master *EntangledRecognitionForest
 }
 
+func (rt*RecognitionTree) copy() *RecognitionTree {
+    var roots []*entangledRecognitionNode = make([]*entangledRecognitionNode,
+                                                len(rt.roots))
+    new := new(RecognitionTree)
+    new.roots = roots
+    new.master = rt.master
+    return new
+}
+
 func (rt*RecognitionTree) Add(re *RecognizedEntity) {
     /*
-    Could re make for a good parent ?
+    Could the roots be children of re ?
+    */
+    /*
+    Could re make for a good root ?
     */
 }
 
@@ -347,11 +359,16 @@ func (rt*RecognitionTree) remove(ern*entangledRecognitionNode) {
 }
 
 
+
 type entangledRecognitionParent interface {
     remove(*entangledRecognitionNode)
 }
 
 type EntangledRecognitionForest []*RecognitionTree
+
+func (erf*EntangledRecognitionForest) append(rt *RecognitionTree) {
+    *erf = append(*erf, rt)
+}
 
 func (erf*EntangledRecognitionForest) remove(rt *RecognitionTree) {
     for i, cur_rt := range *erf {
