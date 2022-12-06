@@ -31,6 +31,7 @@ func (ern*entangledRecognitionNode)copy() *entangledRecognitionNode {
         it removes itself.
 */
 func (ern*entangledRecognitionNode)remove(rn*recognitionNode) {
+    if ern == nil {panic("cannot tolerate removing node from nil")}
     if possibility, ok := ern.possibilities[rn.Surround]; ok {
         for i, rncurr := range possibility {
             if rncurr == rn {
@@ -59,8 +60,15 @@ func (ern*entangledRecognitionNode)remove(rn*recognitionNode) {
 func (ern*entangledRecognitionNode)nodes()[]*recognitionNode {
     var buffer = make([]*recognitionNode, 0, 2*(len(ern.possibilities)+ 1 ))
 
-    for _, array := range ern.possibilities {
-        for _, element := range array {
+    for key, array := range ern.possibilities {
+        for i, element := range array {
+            if element == nil {
+                element = new(recognitionNode)
+                element.Surround = key
+                element.tangler = ern
+                element.ChildMap = make(map[int]*entangledRecognitionNode)
+                ern.possibilities[key][i] = element
+            }
             buffer = append(buffer, element)
         }
     }
@@ -74,9 +82,8 @@ type recognitionNode struct {
 }
 
 func (rn *recognitionNode) copy() *recognitionNode{
-    if rn == nil {
-        return nil
-    }
+    if rn == nil { return nil }
+    
     copy := new(recognitionNode)
     copy.tangler = rn.tangler
     copy.Surround = rn.Surround
@@ -111,6 +118,8 @@ func (rn *recognitionNode) is_incompatible(m map[*RecognizedEntity]*recognitionN
     - rn may be removed, if there are multiple possibilities, but not if there is none.
 */
 func (rn*recognitionNode) add (re *RecognizedEntity, left bool) ([]*entangledRecognitionNode, bool) {
+    if rn == nil  {panic("should not ever seek an empty recognition node")}
+
     var possible []int
 
     if left {
@@ -293,18 +302,29 @@ Also tries to canibalize descendants directly between ern's content and re (in t
 
 Acts recursively. No matter whether we can add to this ern, tries adding to all its descendants.
 */
-func (ern*entangledRecognitionNode) Add(re *RecognizedEntity) {
+func (ern*entangledRecognitionNode) Add(re *RecognizedEntity) bool {
+    var did_add bool = false
+
     for _, possibility := range ern.nodes() {
+        if possibility == nil  {
+            fmt.Println(ern.nodes(), ern.Content.s)
+            panic("should not get a node that is nil")
+        }
         if erns, ok := possibility.Add(re); ok {
             for _, child := range erns{
                 possibility.copy().try_unspooling_children(child)
             }
+            did_add = true
         }
         if right_children := possibility.children_on_the_right(); len(right_children) > 0 {
             rightmost_child := right_children[len(right_children)-1]
-            rightmost_child.Add(re)
+            if rightmost_child.Add(re) {
+                did_add = true
+            }
         }
     }
+    if did_add {fmt.Println("We could add", re.s, "to", ern.Content.s)}
+    return did_add
 }
 
 func (s*surrounding)MatchRight(e Entity)[]int {
@@ -341,17 +361,78 @@ func (rt*RecognitionTree) copy() *RecognitionTree {
                                                 len(rt.roots))
     new := new(RecognitionTree)
     new.roots = roots
+    for i, root := range rt.roots {
+        new.roots[i] = root.copy()
+    }
     new.master = rt.master
     return new
 }
 
+
 func (rt*RecognitionTree) Add(re *RecognizedEntity) {
+    // is the tree empty ?
+    if len(rt.roots) == 0 {
+        // re is the root
+        rt.roots = []*entangledRecognitionNode{&entangledRecognitionNode{Content:re, parent:rt,
+                                            possibilities:make(map[*surrounding][]*recognitionNode)}}
+        fmt.Println("tree now has a root :", re.s)
+        for _, s := range re.surroundings().surr {
+            rt.roots[0].possibilities[s] = []*recognitionNode{
+                &recognitionNode{tangler:rt.roots[0],
+                Surround:s,
+                ChildMap:make(map[int]*entangledRecognitionNode)}}
+        }
+        fmt.Println(rt.roots)
+        return
+    }
+
     /*
     Could the roots be children of re ?
     */
+    re_as_hyper_root_copy := rt.copy()
+    re_as_ern := &entangledRecognitionNode{Content:re,
+                        parent:re_as_hyper_root_copy,
+                        possibilities:make(map[*surrounding][]*recognitionNode)}
+
+    cur_tree := rt.copy()
+    var debased_roots int = 0
+
+    for _, s := range re.surroundings().surr {
+        rn := new(recognitionNode)
+        rn.ChildMap = make(map[int]*entangledRecognitionNode)
+        rn.Surround = s
+        rn.tangler = re_as_ern
+        for i := len(cur_tree.roots) - 1; i>=0; i-- {
+            fmt.Println("rn for", re.s, ":", rn, rn == nil, cur_tree == nil)
+            fmt.Println("\t", cur_tree.roots[i] == nil, cur_tree.roots)
+            if array, ok := rn.add(cur_tree.roots[i].Content, true); ok {
+                for _, head := range array {
+                    head.possibilities = cur_tree.roots[i].possibilities
+                    debased_roots ++
+                }
+            }
+        }
+    }
+    if debased_roots > 0 {
+        rt.master.append(re_as_hyper_root_copy)
+    }
+
     /*
     Could re make for a good root ?
     */
+    fmt.Println("Trying to add", re.s, "as a new root in a new tree")
+    copy := rt.copy()
+    copy.roots = append(copy.roots, &entangledRecognitionNode{Content:re,
+                                            parent:copy,
+                                            possibilities:make(map[*surrounding][]*recognitionNode)})
+    rt.master.append(copy)
+    /*
+     Can re be a descendant of the rightmost root ?
+    */
+    copy = rt.copy()
+    if copy.roots[len(rt.roots)-1].Add(re) {
+        rt.master.append(copy)
+    }
 }
 
 func (rt*RecognitionTree) remove(ern*entangledRecognitionNode) {
@@ -378,7 +459,19 @@ type entangledRecognitionParent interface {
 
 type EntangledRecognitionForest []*RecognitionTree
 
+func (erf*EntangledRecognitionForest) Add (re*RecognizedEntity){
+    previously_existing_trees := make([]*RecognitionTree, len(*erf))
+    copy(previously_existing_trees, *erf)
+    for _, tree := range previously_existing_trees {
+        tree.Add(re)
+    }
+}
+
 func (erf*EntangledRecognitionForest) append(rt *RecognitionTree) {
+    if erf == nil {
+        panic("Cannot append tree on non-existant forest")
+    }
+    rt.master = erf
     *erf = append(*erf, rt)
 }
 
