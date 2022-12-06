@@ -2,7 +2,7 @@ package ceres
 
 import (
     "testing"
-    //"fmt"
+    "fmt"
 )
 
 func TestCERES_Initialization(t*testing.T){
@@ -143,7 +143,7 @@ func setSurrounding(parent, child *EntityType, pos int) {
     proxes = append(proxes, token)
     parent.surroundingList.surr[0].prox = proxes
 }
-/*
+
 func TestShaper(t *testing.T) {
     var At, Bt, Ct *EntityType = new(EntityType),
         new(EntityType), new(EntityType)
@@ -152,7 +152,8 @@ func TestShaper(t *testing.T) {
         MakeRecognizedEntity(Ct, false, false, nil, "C")
 
     var recog = [3]*EntityType{At, Bt, Ct}
-    var rrecog = [3]*RecognizedEntity{&Ar, &Br, &Cr}
+    var recognizedEntities = [...]RecognizedEntity{Ar, Br, Cr}
+    var trmap = map[*EntityType]RecognizedEntity{At:Ar, Bt:Br, Ct:Cr}
 
     var idTransformation = [3][3]int {[3]int{0, 2, 1}, [3]int{2, 1, 0}, [3]int{1, 0, 2}}
 
@@ -161,6 +162,7 @@ func TestShaper(t *testing.T) {
 
             fmt.Println("----------------Conf : ", root_id, ":",
                 desc_id, "----------------")
+            fmt.Println("root is :", recognizedEntities[root_id].s)
             // reboots the surroundingList
             for _, rebootable := range recog {
                 rebootable.surroundingList = surroundingList{surr : make([]*surrounding, 1)}
@@ -173,11 +175,14 @@ func TestShaper(t *testing.T) {
                     if child_id == desc_id {
                         continue
                     }
+                    fmt.Println("layer 1 has :", recognizedEntities[child_id].s)
                     setSurrounding(root, child, child_id - desc_id)
                 }
             } else {
                 middle_id := idTransformation[root_id][desc_id]
                 middle := recog[middle_id]
+                fmt.Println("layer 1 has :", recognizedEntities[middle_id].s)
+                fmt.Println("layer 2 has :", recognizedEntities[desc_id].s)
 
                 setSurrounding(root, middle, middle_id - root_id)
                 setSurrounding(middle, desc, desc_id - middle_id)
@@ -186,19 +191,27 @@ func TestShaper(t *testing.T) {
                     continue
                 }
             }
-            var before, after []*RecognizedEntity = rrecog[0:root_id], rrecog[root_id+1:3]
 
-            fmt.Println("prox :", root.surroundingList.surr[0].prox)
+            proxes := ""
+            initial := true
+            for _, p := range root.surroundingList.surr[0].prox{
+                if !initial {
+                    proxes += ", "
+                } else {initial = false}
+                proxes += trmap[p.stype].s
+            }
+            fmt.Println("\nprox for root :", proxes, "after set up")
 
             // testing
-            var rn = new(RecognitionNode)
-            rn.Content = rrecog[root_id]
-            tree := rn.shape(rrecog[root_id], before, after, 0.)
-            if tree.Root[0].NbChildren() != 3 {
-                t.Error("Tree does not contain 3 but", tree.Root[0].NbChildren(), "nodes.")
-                return
-            }
+            var forest = EntangledRecognitionForest(make([]*RecognitionTree, 0, 4))
+            var tree = new(RecognitionTree)
+            forest.append(tree)
+            forest.Add(&Ar)
+            forest.Add(&Br)
+            forest.Add(&Cr)
+            forest.Display()
+            fmt.Println("___________________________________________________")
+            return
         }
     }
 }
-//*/
