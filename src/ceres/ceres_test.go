@@ -142,6 +142,12 @@ func setSurrounding(parent, child *EntityType, pos int) {
     token := surroundingToken{stype:child, pos:pos, pMissing:0.}
     proxes = append(proxes, token)
     parent.surroundingList.surr[0].prox = proxes
+    if pos > parent.surroundingList.surr[0].maxPos {
+        parent.surroundingList.surr[0].maxPos = pos
+    }
+    if pos < parent.surroundingList.surr[0].minPos {
+        parent.surroundingList.surr[0].minPos = pos
+    }
 }
 
 func TestShaper(t *testing.T) {
