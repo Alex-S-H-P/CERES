@@ -1,10 +1,5 @@
 package ceres
 
-import (
-    "fmt"
-    //"runtime/debug"
-)
-
 type entangledRecognitionNode struct {
     possibilities map[*surrounding][]*recognitionNode
     Content  *RecognizedEntity
@@ -28,7 +23,7 @@ func (ern*entangledRecognitionNode)score() float64 {
             }
         }
         //DEBUG_PRINTOUT//fmt.Printf("score %v at node %v[%v] with %v children\n",
-            score, ern.Content.s, node.Surround.String(), len(node.ChildMap))
+            //DEBUG_PRINTOUT//score, ern.Content.s, node.Surround.String(), len(node.ChildMap))
         if score > maxScore {
             maxScore = score
         }
@@ -528,13 +523,13 @@ func (erf*EntangledRecognitionForest) Add (re*RecognizedEntity){
     }
 
     previously_existing_trees := make([]*RecognitionTree, len(*erf))
-    previous_length := len(previously_existing_trees)
+    //DEBUG_PRINTOUT//previous_length := len(previously_existing_trees)
     copy(previously_existing_trees, *erf)
-    for i, tree := range previously_existing_trees {
-        //DEBUG_PRINTOUT//fmt.Println(TreeSep, "Working on tree n°", i+1, "out of", len(previously_existing_trees), TreeSep)
+    for _, tree := range previously_existing_trees {
+        //INFO_PRINTOUT//fmt.Println(TreeSep, "Working on tree n°", i+1, "out of", len(previously_existing_trees), TreeSep)
         tree.Add(re)
-        //DEBUG_PRINTOUT//fmt.Println(TreeSep, "Created", len(*erf) - previous_length , "new trees", TreeSep)
-        previous_length = len(*erf)
+        //INFO_PRINTOUT//fmt.Println(TreeSep, "Created", len(*erf) - previous_length , "new trees", TreeSep)
+        //INFO_PRINTOUT//previous_length = len(*erf)
     }
 }
 
