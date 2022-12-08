@@ -18,7 +18,7 @@ func (ern*entangledRecognitionNode)copy() *entangledRecognitionNode {
     copy.possibilities = make(map[*surrounding][]*recognitionNode)
     for s, slice := range ern.possibilities {
         copy.possibilities[s] = make([]*recognitionNode, len(slice))
-        for i, ptr := range copy.possibilities[s] {
+        for i, ptr := range slice {
             copy.possibilities[s][i] = ptr.copy()
         }
     }
@@ -316,15 +316,19 @@ Acts recursively. No matter whether we can add to this ern, tries adding to all 
 */
 func (ern*entangledRecognitionNode) Add(re *RecognizedEntity) bool {
     var did_add bool = false
+    //DEBUG_PRINTOUT//fmt.Println("Trying to see if", re.s, "can be added to", ern.Content.s)
 
-    for _, possibility := range ern.nodes() {
+    ern_copy_nodes := ern.copy().nodes()
+
+    for i, possibility := range ern.nodes() {
         if possibility == nil  {
-            fmt.Println(ern.nodes(), ern.Content.s)
+            //DEBUG_PRINTOUT//fmt.Println(ern.nodes(), ern.Content.s)
             panic("should not get a node that is nil")
         }
         if erns, ok := possibility.Add(re); ok {
             for _, child := range erns{
-                possibility.copy().try_unspooling_children(child)
+                ern_copy_nodes[i].try_unspooling_children(child)
+
             }
             did_add = true
         }
