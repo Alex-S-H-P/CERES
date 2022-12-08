@@ -2,20 +2,19 @@ package ceres
 
 import (
 	"fmt"
-	"strconv"
 )
 
-func (erf *EntangledRecognitionForest) Display() {
+func (erf*EntangledRecognitionForest) Display() {
 	fmt.Printf("Displaying forest @%p\n", erf)
-	var lines = []string{}
 	for tree_idx, tree := range *erf {
-		tlines := tree.display()
-		tree_nr := "tree n°"+strconv.Itoa(tree_idx + 1)+
-			" (out of "+strconv.Itoa(len(*erf))+")"
-		lines = append(lines, tree_nr)
-		lines = append(lines, tlines...)
+		fmt.Printf("tree n°%v (out of %v)\n", tree_idx + 1, len(*erf))
+		tree.Display()
 	}
-	for _, line := range lines {
+}
+
+func (rt*RecognitionTree) Display() {
+	t_lines := rt.display()
+	for _, line := range t_lines {
 		fmt.Println(line)
 	}
 }
