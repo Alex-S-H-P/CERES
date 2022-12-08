@@ -119,10 +119,14 @@ func (ern*entangledRecognitionNode) display() (formattedTreeBranch, int) {
             ftb[i+1] = ftb[1+i] + offseter[len(ftb[1+i]):] + "[" + l + "]"
         }
         offset += width + 2
+		for len(offseter) < offset {
+			offseter += " "
+		}
     }
     if offset > len(ftb[0]) {
         ftb[0] = string(offseter[:(offset-len(ftb[0]))/2]) + ftb[0]
     }
+	if offset < len(header) {offset = len(header)}
     return ftb, offset
 }
 
