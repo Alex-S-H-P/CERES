@@ -152,10 +152,10 @@ func (rn*recognitionNode) display() (formattedTreeBranch, int) {
         header string = "", "",
         fmt.Sprintf("{%s}%v", rn.Surround.String(), len(rn.ChildMap))
 
-	fmt.Println("Displaying node with", len(rn.ChildMap),
+	/*fmt.Println("Displaying node with", len(rn.ChildMap),
 		"direct children. header :", header,
 		"searching from", rn.Surround.minPos,
-		"to", rn.Surround.maxPos)
+		"to", rn.Surround.maxPos)*/
 
     var demi_header_width int = len(header) / 2
 
