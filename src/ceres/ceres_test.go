@@ -150,6 +150,10 @@ func setSurrounding(parent, child *EntityType, pos int) {
     }
 }
 
+func abs(x int) int {
+    if x >= 0 {return x} else {return -x}
+}
+
 func TestShaper(t *testing.T) {
     var At, Bt, Ct *EntityType = new(EntityType),
         new(EntityType), new(EntityType)
@@ -166,9 +170,10 @@ func TestShaper(t *testing.T) {
     for root_id, root := range recog {
         for desc_id, desc := range recog {
 
-            fmt.Println("----------------Conf : ", root_id, ":",
+            fmt.Println("\n----------------Conf : ", root_id, ":",
                 desc_id, "----------------")
             fmt.Println("root is :", recognizedEntities[root_id].s)
+
             // reboots the surroundingList
             for _, rebootable := range recog {
                 rebootable.surroundingList = surroundingList{surr : make([]*surrounding, 1)}
@@ -198,6 +203,12 @@ func TestShaper(t *testing.T) {
                 }
             }
 
+            if abs(root_id - desc_id) == 1 {
+                //the root cannot be next to the lowest descendant
+                fmt.Println("\nConfiguration skipped due to children crossing")
+                continue
+            }
+
             proxes := ""
             initial := true
             for _, p := range root.surroundingList.surr[0].prox{
@@ -206,7 +217,6 @@ func TestShaper(t *testing.T) {
                 } else {initial = false}
                 proxes += trmap[p.stype].s
             }
-            fmt.Println("\nprox for root :", proxes, "after set up")
 
             // testing
             var forest = EntangledRecognitionForest(make([]*RecognitionTree, 0, 4))
@@ -215,10 +225,13 @@ func TestShaper(t *testing.T) {
             forest.Add(&Ar)
             forest.Add(&Br)
             forest.Add(&Cr)
-            t, score := forest.bestTree()
-            t.Display()
+            tree, score := forest.bestTree()
+            tree.Display()
             fmt.Println(score)
-            return
+
+            if score != 0.5 {
+                t.Errorf("The tree should only have one root, instead, we estimate that it has %v", int(.5 + .5/score))
+            }
         }
     }
 }
