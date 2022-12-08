@@ -398,6 +398,10 @@ type RecognitionTree struct {
     master *EntangledRecognitionForest
 }
 
+/*
+Makes a copy of the tree at a different address and returns it.
+Does not attempt to add that tree to this one's forest, but does copy the forest pointer into it.
+*/
 func (rt*RecognitionTree) copy() *RecognitionTree {
     var roots []*entangledRecognitionNode = make([]*entangledRecognitionNode,
                                                 len(rt.roots))
