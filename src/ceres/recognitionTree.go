@@ -11,6 +11,32 @@ type entangledRecognitionNode struct {
     parent   entangledRecognitionParent
 }
 
+func (ern*entangledRecognitionNode)score() float64 {
+    var maxScore float64
+
+    nodes := ern.nodes()
+    if len(nodes) == 0 {return 1.}
+
+    for _, node := range nodes {
+        var score float64 = node.Surround.coherence
+        for _, child := range node.ChildMap {
+            score *= child.score()
+        }
+        for _, prox := range node.Surround.prox {
+            if _, ok := node.ChildMap[prox.pos]; !ok {
+                score *= prox.pMissing
+            }
+        }
+        //DEBUG_PRINTOUT//fmt.Printf("score %v at node %v[%v] with %v children\n",
+            score, ern.Content.s, node.Surround.String(), len(node.ChildMap))
+        if score > maxScore {
+            maxScore = score
+        }
+    }
+    //DEBUG_PRINTOUT//fmt.Println("maxScore for", ern.Content.s, ": ", maxScore)
+    return maxScore
+}
+
 func (ern*entangledRecognitionNode)copy() *entangledRecognitionNode {
     copy := new(entangledRecognitionNode)
     copy.parent = ern.parent
@@ -471,7 +497,17 @@ func (rt*RecognitionTree) remove(ern*entangledRecognitionNode) {
     }
 }
 
+func (rt*RecognitionTree) score() float64 {
+    var score float64 = 1.
 
+    for _, root := range rt.roots {
+        sc := root.score()
+        score *= 0.5 * sc
+        //DEBUG_PRINTOUT//fmt.Println("score for root", root.Content.s, ":", sc)
+    }
+
+    return score
+}
 
 type entangledRecognitionParent interface {
     remove(*entangledRecognitionNode)
@@ -520,4 +556,17 @@ func (erf*EntangledRecognitionForest) remove(rt *RecognitionTree) {
             return
         }
     }
+}
+
+func (erf*EntangledRecognitionForest) bestTree() (*RecognitionTree, float64) {
+    var max_idx int
+    var score float64
+    for i, tree := range *erf {
+        sc := tree.score()
+        if sc > score {
+            max_idx = i
+            score = sc
+        }
+    }
+    return (*erf)[max_idx], score
 }
