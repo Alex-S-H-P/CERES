@@ -215,8 +215,9 @@ func TestShaper(t *testing.T) {
             forest.Add(&Ar)
             forest.Add(&Br)
             forest.Add(&Cr)
-            forest.Display()
-            fmt.Println("___________________________________________________")
+            t, score := forest.bestTree()
+            t.Display()
+            fmt.Println(score)
             return
         }
     }
