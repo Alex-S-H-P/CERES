@@ -105,7 +105,7 @@ ROOT_DISPLAY_LOOP:
 
 func (ern*entangledRecognitionNode) display() (formattedTreeBranch, int) {
     var ftb formattedTreeBranch
-    var offset int
+	var offset int
     var offseter, header string = "", "("+ern.Content.s+")"
 
     ftb = append(ftb, header)
@@ -115,9 +115,10 @@ func (ern*entangledRecognitionNode) display() (formattedTreeBranch, int) {
             if len(ftb) <= i + 1 { // ftb[i+1] <- lines[i]
                 ftb = append(ftb, "")
             }
-            ftb[i+1] = ftb[1+i] + offseter[len(ftb[1+i]):] + "[" + l + "]"
+            ftb[i+1] = fmt.Sprintf("%s%s[%s", ftb[1+i],
+				offseter[:len(ftb[1+i])], l)
         }
-        offset += width + 2
+        offset += width + 1
 		for len(offseter) < offset {
 			offseter += " "
 		}
@@ -126,9 +127,19 @@ func (ern*entangledRecognitionNode) display() (formattedTreeBranch, int) {
         ftb[0] = string(offseter[:(offset-len(ftb[0]))/2]) + ftb[0]
     }
 	if offset < len(header) {offset = len(header)}
-    return ftb, offset
-}
+	/*fmt.Println("Preparing to display", ern.Content.s, "(width:",offset,
+		",", len(ern.nodes()), "nodes treated)")//*/
+	for i, line := range ftb {
+		if i == 0 {continue}
+		if len(line) < offset {
+			ftb[i] = line + offseter[len(line):] + "]"
+		} else {
+			ftb[i] = line + "]"
+		}
+	}
 
+    return ftb, offset + 1
+}
 
 func (rn*recognitionNode) display() (formattedTreeBranch, int) {
 	if rn == nil {
@@ -139,7 +150,12 @@ func (rn*recognitionNode) display() (formattedTreeBranch, int) {
 
     var loffseter, roffseter,
         header string = "", "",
-        fmt.Sprintf("{%s}", rn.Surround.String())
+        fmt.Sprintf("{%s}%v", rn.Surround.String(), len(rn.ChildMap))
+
+	fmt.Println("Displaying node with", len(rn.ChildMap),
+		"direct children. header :", header,
+		"searching from", rn.Surround.minPos,
+		"to", rn.Surround.maxPos)
 
     var demi_header_width int = len(header) / 2
 
@@ -157,14 +173,14 @@ func (rn*recognitionNode) display() (formattedTreeBranch, int) {
         switch {
         case pos == 0:
             continue
-        case pos > 0:
+        case pos < 0:
 			left_subtree, l_width = mergeLines(left_subtree, len(loffseter),
 												lines, width, " ")
             for len(loffseter) < l_width {
 				loffseter += " "
 			}
-        case pos < 0:
-			right_subtree, r_width = mergeLines(right_subtree, len(loffseter),
+        default:
+			right_subtree, r_width = mergeLines(right_subtree, len(roffseter),
 												 lines, width, " ")
             for len(roffseter) < r_width {
 				roffseter += " "
@@ -178,7 +194,9 @@ func (rn*recognitionNode) display() (formattedTreeBranch, int) {
 
 	if demi_header_width < total_width / 2 {
 		ftb[0] = (loffseter+roffseter)[:total_width/2-demi_header_width] + ftb[0]
+	} else {
+		total_width = len(header)
 	}
 
-    return ftb, offset
+    return ftb, total_width
 }
