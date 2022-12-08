@@ -3,6 +3,7 @@ package ceres
 import (
     "math"
     "sync"
+    "fmt"
     "strings"
     "strconv"
     "encoding/binary"
@@ -74,6 +75,46 @@ func (s*surrounding)save(m map[Entity]int)[]byte{
         b = append(b,[]byte(strconv.Itoa(p.pos))...)
     }
     return b
+}
+
+// Returns the number of proxes that are purely optionnal
+func (s*surrounding) PurelyOptionnalProxes() int {
+    var count int
+    for _, prox := range s.prox {
+        if prox.pMissing == 1. {
+            count ++
+        }
+    }
+    return count
+}
+
+/*
+ Returns the number of elements that cannot be missing for this context to make any sense
+*/
+func (s*surrounding)NecessaryProxes() int {
+    var count int
+    for _, prox := range s.prox {
+        if prox.pMissing == 0. {
+            count ++
+        }
+    }
+    return count
+}
+
+func (s*surrounding)String() string {
+    var str string = fmt.Sprintf("s{%v}: [", s.coherence)
+    var initialLoop bool = true
+
+    for _, prox := range s.prox {
+        if initialLoop {initialLoop = false} else {str+=", "}
+        if prox.pMissing != 0 {
+            str += fmt.Sprintf("%p @%v (%v)", prox.stype, prox.pos, prox.pMissing)
+        } else {
+            str += fmt.Sprintf("%p @%v", prox.stype, prox.pos)
+        }
+    }
+
+    return str + "]"
 }
 
 func (s*surrounding)load(b string, m map[int]Entity){

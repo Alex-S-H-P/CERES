@@ -133,10 +133,10 @@ func (rn*recognitionNode) display() (formattedTreeBranch, int) {
 	}
 
 	var ftb formattedTreeBranch
-    var offset int
+
     var loffseter, roffseter,
         header string = "", "",
-        fmt.Sprintf("{%p}", rn.Surround)
+        fmt.Sprintf("{%s}", rn.Surround.String())
 
     var demi_header_width int = len(header) / 2
 
