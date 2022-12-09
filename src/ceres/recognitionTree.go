@@ -1,5 +1,7 @@
 package ceres
 
+//DEBUG_PRINTOUT//import "fmt"
+
 type entangledRecognitionNode struct {
     possibilities map[*surrounding][]*recognitionNode
     Content  *RecognizedEntity
@@ -312,7 +314,9 @@ func (rn*recognitionNode) try_unspooling_children(ern*entangledRecognitionNode) 
     Considers adding the recognized entity as a child of this node.
     This does not generate the possibility that the RecognizedEntity is not a fitting child
 
-    Returns whether or not the re could be added
+    Returns two values :
+        - an array : contains all of the possible positionned ern
+        - a boolean : whether or not the re could be added
 */
 func (rn*recognitionNode) Add (re *RecognizedEntity) ([]*entangledRecognitionNode, bool) {
     var answer []*entangledRecognitionNode
@@ -434,7 +438,6 @@ func (rt*RecognitionTree) Add(re *RecognizedEntity) {
                         parent:re_as_hyper_root_copy,
                         possibilities:make(map[*surrounding][]*recognitionNode)}
 
-    cur_tree := rt.copy()
     var debased_roots int = 0
 
     for _, s := range re.surroundings().surr {
@@ -442,19 +445,25 @@ func (rt*RecognitionTree) Add(re *RecognizedEntity) {
         rn.ChildMap = make(map[int]*entangledRecognitionNode)
         rn.Surround = s
         rn.tangler = re_as_ern
-        for i := len(cur_tree.roots) - 1; i>=0; i-- {
+
+        re_as_ern.possibilities[s] = []*recognitionNode{rn}
+
+        for i := len(re_as_hyper_root_copy.roots) - 1; i>=0; i-- {
 
             //DEBUG_PRINTOUT//fmt.Println("rn for", re.s, ":", rn)
-            //DEBUG_PRINTOUT//fmt.Println("\t", cur_tree.roots[i] == nil, cur_tree.roots)
-            if array, ok := rn.add(cur_tree.roots[i].Content, true); ok {
+            //DEBUG_PRINTOUT//fmt.Println("Attempting to add root",
+                //DEBUG_PRINTOUT//re_as_hyper_root_copy.roots[i].Content.s, "to", re.s)
+            if array, ok := rn.add(re_as_hyper_root_copy.roots[i].Content, true); ok {
+                //DEBUG_PRINTOUT//fmt.Println("Success :", array)
                 for _, head := range array {
-                    head.possibilities = cur_tree.roots[i].possibilities
+                    head.possibilities = re_as_hyper_root_copy.roots[i].possibilities
                     debased_roots ++
                 }
             }
         }
     }
     if debased_roots > 0 {
+        re_as_hyper_root_copy.roots = append(re_as_hyper_root_copy.roots[:len(rt.roots) - debased_roots], re_as_ern)
         rt.master.append(re_as_hyper_root_copy)
     }
 
