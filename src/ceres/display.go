@@ -51,8 +51,8 @@ func mergeLines(a formattedTreeBranch, a_width int,
 		default: // i < len(a) && i < len(b)
 			answer[i] = a[i] + offseter[len(a):] + sep + b[i]
 		}
-		if width < a_width + len(b[i]) {
-			width = a_width + len(b[i]) + len(sep)
+		if width < len(answer[i])  {
+			width = len(answer[i])
 		}
 	}
 
@@ -176,6 +176,7 @@ func (rn*recognitionNode) display() (formattedTreeBranch, int) {
         case pos < 0:
 			left_subtree, l_width = mergeLines(left_subtree, len(loffseter),
 												lines, width, " ")
+			/*fmt.Println("adding left", left_subtree.maxWidth(), l_width, "on", child.Content.s, ":", lines)*/
             for len(loffseter) < l_width {
 				loffseter += " "
 			}
