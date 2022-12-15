@@ -154,6 +154,7 @@ func abs(x int) int {
     if x >= 0 {return x} else {return -x}
 }
 
+/*
 func TestShaper(t *testing.T) {
     var At, Bt, Ct *EntityType = new(EntityType),
         new(EntityType), new(EntityType)
@@ -229,9 +230,74 @@ func TestShaper(t *testing.T) {
             tree.Display()
             fmt.Println(score)
 
-            if score != 0.5 {
-                t.Errorf("The tree should only have one root, instead, we estimate that it has %v", int(.5 + .5/score))
+            if score != 0.5 || len(tree.roots) != 1 {
+                t.Errorf("The tree should only have one root, it has %v (via score) or %v (via counting) roots instead", int(.5 + .5/score), len(tree.roots))
+            } else {
+                n := tree.roots[0].nodes()[0]
+                switch {
+                case len(n.ChildMap) == 1 || root_id != desc_id:
+                case len(n.ChildMap) == 2 || root_id == desc_id:
+                default:
+                    var desired int = 1
+                    if root_id == desc_id {desired = 2}
+
+                    t.Errorf("The root does not have the right amount of children %v instead of %v",
+                        len(n.ChildMap), desired)
+                }
             }
+
+
         }
     }
+}
+*/
+
+func TestRuleMatcher(t*testing.T) {
+    r := ruleString("A -> A B")
+    if g, b := r.matches("A", "B"); b {
+        if g != "A" {
+            t.Errorf("Did not match to the right group. Matched to \"%s\" instead of \"A\"", string(g))
+        }
+    } else {
+        t.Errorf("Did not match where there should be a match")
+    }
+}
+
+func TestCYK(t*testing.T){
+    var At, Bt, Ct *EntityType = new(EntityType),
+        new(EntityType), new(EntityType)
+    var Ar, Br, Cr RecognizedEntity = MakeRecognizedEntity(At, false, false, nil, "A"),
+        MakeRecognizedEntity(Bt, false, false, nil, "B"),
+        MakeRecognizedEntity(Ct, false, false, nil, "C")
+
+    var g grammar = grammar{rules:[]rule{ruleString("E -> B C"),
+                                         ruleString("D -> A E"),
+                                         ruleString("B -> B"),
+                                         ruleString("C -> C"),
+                                         ruleString("A -> A")}}
+
+    table := CYK_PARSE([]RecognizedEntity{Ar, Br, Cr}, g)
+
+    fmt.Println("                ")
+    fmt.Println(table.rslt())
+    for j := 0; j<3; j++ {
+        if len(table[j][j].assignments) != 1 {
+            line := "["
+            sep := ""
+            for _, assignment := range table[j][j].assignments{
+                line += fmt.Sprintf("%s \"%s\"", sep, assignment)
+                sep = ","
+            }
+            fmt.Println(line, "]")
+            t.Errorf("Too many assignments (%v instead of 1) in the case at location (%v, %v)",
+                        len(table[j][j].assignments), j, j)
+        }
+    }
+    if len(table.rslt().assignments) < 1 {
+        t.Errorf("Could not get an answer")
+    } else if len(table.rslt().assignments) > 1 {
+        t.Errorf("Got too many answers (%v instead of 1)", len(table.rslt().assignments))
+    }
+
+    table.display_tree(0)
 }
