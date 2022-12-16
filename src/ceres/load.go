@@ -37,7 +37,10 @@ func (c *CERES) load(fn string) error {
 	workers, err = strconv.Atoi(C[4])
 	c.sentence_analyser_workers = workers
 
-	c.ics.load(b1, b2)
+	c.grammar, err = grammar_load(fn + ".grammar")
+	if err != nil {return err}
+
+	c.ics.load(b1, b2, c.grammar.groups)
 	fmt.Println(c, "\n", c.root)
 	c.pcs.load(b3)
 	fmt.Println(c)
@@ -51,7 +54,7 @@ Loads ics.
 
 Should not run while any other goroutine has access to the ICS.
 */
-func (ics*ICS)load(b1,b2 *[]byte){
+func (ics*ICS)load(b1,b2 *[]byte, grammar_groups map[string]group){
 	// setting b2
 	m := make(map[int]Entity)
 	C := strings.Split(string(*b2), UnitSEP)
@@ -86,7 +89,7 @@ func (ics*ICS)load(b1,b2 *[]byte){
 				}
 				et.attributes.attrs = append(et.attributes.attrs, m[Cidx].(*EntityType))
 			}
-			et.grammar_group = group(c[len(c)-1])
+			et.grammar_group = grammar_groups[c[len(c)-1]]
 		case "inst":
 			ei := new(EntityInstance)
 			m[parent_index].(*EntityType).addChild(ei)
