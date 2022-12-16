@@ -11,6 +11,8 @@ type CERES struct {
 
     root *EntityType
 
+    grammar *grammar
+
     initialized bool
 
     sentence_analyser_workers int
