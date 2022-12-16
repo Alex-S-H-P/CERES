@@ -11,14 +11,19 @@ type group_info struct {
     assignment_idx int_pair
 }
 
-type group string
+type group struct {
+    name string
+    // instanceSolver is the lowest EntityType such that all ideas
+    // represented in that group are children of that EntityType
+    instanceSolver *EntityType
+}
 
-func MakeGroup(s string)group {
-    return group(s)
+func MakeGroup(s string, g*grammar)group {
+    return g.find(s)
 }
 
 func (g group)String() string{
-    return string(g)
+    return g.name
 }
 
 type int_pair struct {
@@ -62,16 +67,13 @@ func MakeCYKTable(n int) cyk_table{
 
 type ruleString string
 
-func (r ruleString) matches(arg1, arg2 string) (group, bool) {
-    var rgroup group
+func (r ruleString) matches(arg1, arg2 string) (string, bool) {
     var cond1, cond2 string
     match := re_rule.FindStringSubmatch(string(r))
     if len(match) < 4 {
         panic("this rule cannot be processed")
     }
 
-
-    rgroup = group(match[1])
     cond1, cond2 = match[2], match[3]
 
     match1 := regexp.MustCompile(cond1).FindString(arg1)
@@ -82,23 +84,25 @@ func (r ruleString) matches(arg1, arg2 string) (group, bool) {
     fmt.Printf("ruleString :\"%s\", \"%s\", \"%s\" <- \"%s\". Matched \"%s\" & \"%s\"\n",
         match[1], match[2], match[3], match[0], match1, match2)
 
-    return rgroup, true
+    return match[1], true
 }
 
 func (r ruleString) String() string {return string(r)}
 
 type rule interface {
-    matches(string, string) (group, bool)
+    matches(string, string) (string, bool)
     String() string
 }
 
 type grammar struct {
     rules []rule
+
+    groups map[string]group
 }
 
 
 func (g*grammar) singleAssign(element RecognizedEntity) []group {
-    return g.internalassign(MakeGroup(element.s), "")
+    return g.internalassign(MakeGroup(element.s, g), group{})
 }
 
 func (g*grammar)assign(left, down cyk_case) []group_info{
@@ -115,11 +119,21 @@ func (g*grammar)assign(left, down cyk_case) []group_info{
     return slice
 }
 
+func (g*grammar) find(name string) group {
+    if gr, ok := g.groups[name]; ok {
+        return gr
+    } else {
+        gr := group{name:name}
+        g.groups[name] = gr
+        return gr
+    }
+}
+
 func (g*grammar)internalassign(a, b group) []group {
     slice := make([]group, 0, 3)
     for _, rule := range g.rules {
-        if g, ok := rule.matches(a.String(), b.String()); ok && len(g) > 0{
-            slice = append(slice, g)
+        if group, ok := rule.matches(a.String(), b.String()); ok && len(group) > 0{
+            slice = append(slice, g.find(group))
         }
     }
     return slice

@@ -6,7 +6,7 @@ import (
     "CERES/src/utils"
 )
 
-const UNKNOWN_GRAMMAR group = "[⁇Unknown⁇]"
+var UNKNOWN_GRAMMAR group = group{name:"[⁇Unknown⁇]", instanceSolver:nil}
 
 type EntityType struct {
     parent *EntityType

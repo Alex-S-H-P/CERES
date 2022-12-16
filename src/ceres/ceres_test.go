@@ -159,7 +159,8 @@ func TestCYK(t*testing.T){
                                          ruleString("D -> A E"),
                                          ruleString("B -> B"),
                                          ruleString("C -> C"),
-                                         ruleString("A -> A")}}
+                                         ruleString("A -> A")},
+                            groups:make(map[string]group)}
 
     table := CYK_PARSE([]RecognizedEntity{Ar, Br, Cr}, g)
 
