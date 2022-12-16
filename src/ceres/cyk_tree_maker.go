@@ -85,8 +85,11 @@ func (r ruleString) matches(arg1, arg2 string) (group, bool) {
     return rgroup, true
 }
 
+func (r ruleString) String() string {return string(r)}
+
 type rule interface {
     matches(string, string) (group, bool)
+    String() string
 }
 
 type grammar struct {
