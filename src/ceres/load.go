@@ -162,6 +162,41 @@ func (pcs*PCS)load(b*[]byte){
 	}
 }
 
+func grammar_load(path string) (*grammar, error) {
+	f, e := os.Open(path)
+	if e != nil {
+		return nil, e
+	}
+	defer f.Close()
+	var contents *string = new(string)
+
+	fmt.Fscanf(f, "%s␃\n", contents)
+	lines := strings.Split(*contents, "\n")
+
+	var g *grammar = new(grammar)
+
+	for _, line := range lines {
+		r := ruleString(line)
+		g.rules = append(g.rules, r)
+	}
+
+	return g, nil
+}
+
+func (g*grammar)save(path string)error {
+	f, e := os.Open(path)
+	if e != nil {
+		return e
+	}
+	defer f.Close()
+	var contents string
+	for _, r := range g.rules {
+		contents = r.String() + "\n"
+	}
+	fmt.Fprintf(f, "%s␃\n", contents)
+	return nil
+}
+
 func (ucs*UCS)load(b*[]byte){
 	C := strings.Split(string(*b), UnderSEP)
 	ucs.unrecognized_words = make([]Word, 0, len(C))
