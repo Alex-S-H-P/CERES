@@ -72,19 +72,21 @@ func (ics*ICS)load(b1,b2 *[]byte){
 			if parent_index >= 0 {
 				m[parent_index].(*EntityType).addChild(et)
 			} else {
-				fmt.Println("Setting root", et)
 				ics.master.root = et
 				ics.master.ucs.ceres_main = et
+				fmt.Println("Setting root", et)
 			}
 			e = Entity(et)
 			et.attributes = new(AttributeTypeList)
-			for i := 3; i<len(c); i++ {
+			fmt.Println(c[0], "|", c[1], "|", c[2], "||", c[3:len(c)-1], "||", c[len(c)-1])
+			for i := 3; i<len(c)-1; i++ {
 				Cidx, err := strconv.Atoi(c[i])
 				if err != nil {
 					panic(err)
 				}
 				et.attributes.attrs = append(et.attributes.attrs, m[Cidx].(*EntityType))
 			}
+			et.grammar_group = group(c[len(c)-1])
 		case "inst":
 			ei := new(EntityInstance)
 			m[parent_index].(*EntityType).addChild(ei)
@@ -263,6 +265,7 @@ func safeIndexEntity(e Entity, m map[Entity]int, entityDict *[]byte) int {
 				fmt.Println("Attr ::", attr)
 				s += strconv.Itoa(safeIndexEntity(attr, m, entityDict)) + UnderSEP
 			}
+			s += et.grammar_group.String() + UnderSEP
 		case *EntityInstance:
 			ei := e.(*EntityInstance)
 			s = "␟inst␣" + strconv.Itoa(safeIndexEntity(ei, m, entityDict)) + "␣" +

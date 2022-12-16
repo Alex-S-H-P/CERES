@@ -6,15 +6,19 @@ import (
     "CERES/src/utils"
 )
 
+const UNKNOWN_GRAMMAR group = "[⁇Unknown⁇]"
+
 type EntityType struct {
     parent *EntityType
     attributes *AttributeTypeList
     children *[]Entity
+    grammar_group group
 }
 
 func (et *EntityType)Initialize() {
     et.attributes = new(AttributeTypeList)
     et.children = new([]Entity)
+    et.grammar_group = UNKNOWN_GRAMMAR
 }
 
 type EntityInstance struct {

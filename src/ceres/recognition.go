@@ -38,6 +38,15 @@ func (re *RecognizedEntity) GetNumber() int8 {return re.entity.GetNumber()}
 
 func (re *RecognizedEntity) GetGender() int8 {return re.entity.GetGender()}
 
+func (re *RecognizedEntity) GetGrammarGroup() group {
+    switch  re.entity.(type) {
+    case *EntityType:
+        return re.entity.(*EntityType).grammar_group
+    default:
+        return re.entity.directTypeOf().grammar_group
+    }
+}
+
 type tokenT uint8
 
 const (
