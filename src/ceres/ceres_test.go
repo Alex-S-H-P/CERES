@@ -136,24 +136,6 @@ func TestCERES_Saving(t *testing.T) {
         t.Fail()
     }
 }
-
-func setSurrounding(parent, child *EntityType, pos int) {
-    proxes := parent.surroundingList.surr[0].prox
-    token := surroundingToken{stype:child, pos:pos, pMissing:0.}
-    proxes = append(proxes, token)
-    parent.surroundingList.surr[0].prox = proxes
-    if pos > parent.surroundingList.surr[0].maxPos {
-        parent.surroundingList.surr[0].maxPos = pos
-    }
-    if pos < parent.surroundingList.surr[0].minPos {
-        parent.surroundingList.surr[0].minPos = pos
-    }
-}
-
-func abs(x int) int {
-    if x >= 0 {return x} else {return -x}
-}
-
 /*
 func TestShaper(t *testing.T) {
     var At, Bt, Ct *EntityType = new(EntityType),

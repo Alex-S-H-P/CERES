@@ -10,7 +10,6 @@ type EntityType struct {
     parent *EntityType
     attributes *AttributeTypeList
     children *[]Entity
-    surroundingList surroundingList
 }
 
 func (et *EntityType)Initialize() {
