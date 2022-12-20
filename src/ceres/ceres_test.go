@@ -124,11 +124,14 @@ func TestCERES_Saving(t *testing.T) {
     c.createEntityType("caracteristic")
     c.createEntityType("action")
     c.createEntityType("thing")
-    c.save(fileSpace)
+    e := c.save(fileSpace)
+    if e != nil {
+        t.Error(e)
+    }
 
     c2 := new(CERES)
     c2.Initialize(1)
-    e := c2.load(fileSpace)
+    e = c2.load(fileSpace)
     if e != nil {
         t.Error(e)
     }
