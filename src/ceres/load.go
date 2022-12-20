@@ -36,12 +36,15 @@ func (c *CERES) load(fn string) error {
 
 	workers, err = strconv.Atoi(C[4])
 	c.sentence_analyser_workers = workers
+	var future_action_groups map[string]int
 
-	c.grammar, err = grammar_load(fn + ".grammar")
+	c.grammar, future_action_groups, err = grammar_load(fn + ".grammar")
 	if err != nil {return err}
 
-	c.ics.load(b1, b2, c.grammar.groups)
+	solver := c.ics.load(b1, b2, c.grammar.groups)
 	fmt.Println(c, "\n", c.root)
+	c.grammar.resolve_future_actions_on_loading(solver, future_action_groups)
+
 	c.pcs.load(b3)
 	fmt.Println(c)
 	c.ucs.load(b4)
@@ -54,7 +57,7 @@ Loads ics.
 
 Should not run while any other goroutine has access to the ICS.
 */
-func (ics*ICS)load(b1,b2 *[]byte, grammar_groups map[string]group){
+func (ics*ICS)load(b1,b2 *[]byte, grammar_groups map[string]group) map[int]Entity{
 	// setting b2
 	m := make(map[int]Entity)
 	C := strings.Split(string(*b2), UnitSEP)
@@ -127,6 +130,7 @@ func (ics*ICS)load(b1,b2 *[]byte, grammar_groups map[string]group){
 	}
 
 	// b1 set
+	return m
 }
 
 func (pcs*PCS)load(b*[]byte){
@@ -155,39 +159,60 @@ func (pcs*PCS)load(b*[]byte){
 	}
 }
 
-func grammar_load(path string) (*grammar, error) {
+func grammar_load(path string) (*grammar, map[string]int, error) {
 	f, e := os.Open(path)
 	if e != nil {
-		return nil, e
+		return nil, nil, e
 	}
 	defer f.Close()
-	var contents *string = new(string)
-
-	fmt.Fscanf(f, "%s␃\n", contents)
-	lines := strings.Split(*contents, "\n")
 
 	var g *grammar = new(grammar)
+	var m = make(map[string]int)
 
-	for _, line := range lines {
-		r := ruleString(line)
-		g.rules = append(g.rules, r)
+
+	for {
+		var pline = new(string)
+		fmt.Fscanf(f, "%s\n", pline)
+
+		line := (*pline)
+		if (line) == "␃" {
+			break
+		}
+
+		if len(line) == 0 {continue}
+
+		sline := strings.Split(line, UnitSEP)
+		fmt.Printf("loader : \"%s\"=>\"%s\", \"%s\"\n", line, sline[0], sline[1])
+
+		if len(sline) != 2 {
+			return nil, nil, fmt.Errorf("Cannot process line \"%s\" (%v elements found instead of 2)", line, len(sline))
+		}
+		if len(sline[0]) != 0{
+			r := ruleString(sline[0])
+			g.rules = append(g.rules, r)
+		}
+		if len(sline[1]) != 0 { // we give an entityInstance -> group link
+			b := strings.Split(sline[1], ">")
+			fmt.Println(b[0], "|>", b[1])
+			id, err := strconv.Atoi(b[1])
+			if err != nil {
+				return nil, nil, fmt.Errorf("Could not extract entityID :%s", err.Error())
+			}
+			m[b[0]] = id
+		}
 	}
+	g.groups = make(map[string]group)
 
-	return g, nil
+	return g, m, nil
 }
 
-func (g*grammar)save(path string)error {
-	f, e := os.Open(path)
-	if e != nil {
-		return e
+func (g*grammar) resolve_future_actions_on_loading(solver map [int]Entity, future_actions map[string]int){
+	fmt.Println("resolver : ", solver, future_actions)
+	for name, entityID := range future_actions {
+		et := solver[entityID].(*EntityType)
+		et.grammar_group = g.find(name)
+		fmt.Printf("resolver \"%s\" : %v for %v\n", name, entityID, et)
 	}
-	defer f.Close()
-	var contents string
-	for _, r := range g.rules {
-		contents = r.String() + "\n"
-	}
-	fmt.Fprintf(f, "%s␃\n", contents)
-	return nil
 }
 
 func (ucs*UCS)load(b*[]byte){
@@ -199,7 +224,14 @@ func (ucs*UCS)load(b*[]byte){
 }
 
 func (c *CERES) save(fn string) error {
-	b1, b2, e := c.ics.save()
+
+
+	b1, b2, m, e := c.ics.save()
+	if e != nil {
+		return e
+	}
+
+	e = c.grammar.save(fn + ".grammar", m)
 	if e != nil {
 		return e
 	}
@@ -289,7 +321,7 @@ func safeIndexEntity(e Entity, m map[Entity]int, entityDict *[]byte) int {
 	return i
 }
 
-func (ics *ICS) save() ([]byte, []byte, error) {
+func (ics *ICS) save() ([]byte, []byte, map[Entity]int, error) {
 	b1, b2 := make([]byte, 0, 2048*2048), make([]byte, 0, 2048)
 	var m map[Entity]int = make(map[Entity]int)
 	var initial bool = true
@@ -315,7 +347,7 @@ func (ics *ICS) save() ([]byte, []byte, error) {
 
 	}
 	fmt.Println(string(b1), string(b2))
-	return b1[:len(b1)], b2[:len(b2)], nil
+	return b1[:len(b1)], b2[:len(b2)], m, nil
 }
 
 func (pcs *PCS) save() ([]byte, error) {
@@ -358,4 +390,46 @@ func (ucs *UCS) save() ([]byte, error) {
 	}
 	fmt.Println(string(b))
 	return b[:len(b)], nil
+}
+
+
+func (g*grammar)save(path string, m map[Entity]int)error {
+	if g == nil {return fmt.Errorf("Cannot save non-existant grammar")}
+	var contents string
+
+	f, e := os.Create(path)
+	if e != nil {
+		return e
+	}
+	defer f.Close()
+
+	key_arr := make([]*EntityType, len(m))
+	var i int = 0
+	for e := range m {
+		if et, ok := e.(*EntityType); ok {
+			key_arr[i] = et
+			i++
+		}
+	}
+
+	for line := 0; line < len(m) || line < len(g.rules); line ++ {
+		var ruleSub, entitySub string
+		if line < len(g.rules) {
+			ruleSub = g.rules[line].String()
+		}
+		if line < len(key_arr){
+			if key_arr[line] != nil {
+				et := key_arr[line]
+
+				entitySub = fmt.Sprintf("%s>%v", et.grammar_group.String(),m[Entity(et)])
+
+			} else if line >= len(g.rules){
+				break
+			}
+		}
+		contents += ruleSub + UnitSEP + entitySub + "\n"
+	}
+
+	_, err := fmt.Fprintf(f, "%s␃\n", contents)
+	return err
 }
