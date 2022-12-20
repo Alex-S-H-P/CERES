@@ -121,9 +121,18 @@ const fileSpace = "test.ceres"
 func TestCERES_Saving(t *testing.T) {
     c := new(CERES)
     c.Initialize(1)
-    c.createEntityType("caracteristic")
-    c.createEntityType("action")
-    c.createEntityType("thing")
+    words := []Word{"caracteristic", "action", "thing"}
+    c.createEntityType(words[0])
+    c.createEntityType(words[1])
+    c.createEntityType(words[2])
+
+    thing := (*c.root.children)[2].(*EntityType)
+    thing.grammar_group = group{"NOUN", thing}
+    caracteristic := (*c.root.children)[1].(*EntityType)
+    caracteristic.grammar_group = group{"ADJ", caracteristic}
+    action := (*c.root.children)[0].(*EntityType)
+    action.grammar_group = group{"VERB", action}
+
     e := c.save(fileSpace)
     if e != nil {
         t.Error(e)
@@ -137,6 +146,18 @@ func TestCERES_Saving(t *testing.T) {
     }
     if len(*c.root.children) != len(*c2.root.children) {
         t.Fail()
+    }
+    for i, w := range words{
+        de := c2.ics.entityDictionary[w]
+        if len(de.entities) != 1 {
+            t.Errorf("The word %s was not saved correctly into the new CERES instance (%v)", w, de)
+        } else {
+            if de.entities[0].(*EntityType).grammar_group.name != (*c.root.children)[i].(*EntityType).grammar_group.name {
+                t.Errorf("Entity for \"%s\" was found in both original and copies, but they did not have the same grammar_groups [%s!=%s]",
+                        w, de.entities[0].(*EntityType).grammar_group.name,
+                        (*c.root.children)[i].(*EntityType).grammar_group.name)
+            }
+        }
     }
 }
 
