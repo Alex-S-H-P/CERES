@@ -1,6 +1,6 @@
 package utils
 
-type generator[T any] struct {
+type Generator[T any] struct {
     next func() (T, bool) // the boolean value returns true when the last element is given
     stop func()
 
@@ -12,7 +12,7 @@ type generator[T any] struct {
     el T // currently considered element
 }
 
-func (g*generator[T]) Start() {
+func (g*Generator[T]) Start() {
     g.returned = make(chan T)
     g.stopchan = make(chan bool)
     g.nb = 0
@@ -36,7 +36,7 @@ func (g*generator[T]) Start() {
 }
 
 // returns a slice of all of the remaining elements.
-func (g*generator[T]) Slice() []T {
+func (g*Generator[T]) Slice() []T {
     slice := make([]T, 32)
     slice = append(slice, g.el)
     for {
@@ -49,7 +49,7 @@ func (g*generator[T]) Slice() []T {
 
 
 // Returns the next element of the generator, if the generator is finished, returns true. Does return the last element
-func (g*generator[T]) Next() (T, bool){
+func (g*Generator[T]) Next() (T, bool){
     default_t := *(new(T))
     if g.stopped {
         return default_t, true
