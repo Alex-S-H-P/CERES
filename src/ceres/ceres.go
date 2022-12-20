@@ -29,6 +29,12 @@ func (c *CERES)Initialize(workers int){
     c.ctx = new(CTX)
     c.ctx.Initialize()
 
+    if c.grammar == nil {
+        c.grammar = new(grammar)
+        c.grammar.groups = make(map[string]group)
+        c.grammar.rules = make([]rule, 0, 1024)
+    }
+
     c.sentence_analyser_workers = 1
 
     c.createEntityType("entity")
