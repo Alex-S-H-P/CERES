@@ -211,3 +211,27 @@ func TestCYK(t*testing.T){
 
     table.display_tree(0)
 }
+
+func TestClosestAncestor(t *testing.T) {
+    A := new(EntityType)
+    A.Initialize()
+    if ClosestAncestor(A, A) != A {
+        t.Errorf("Equal types aren't their own closest ancestor (they should be)")
+    }
+    ancestorsOfA := make([]*EntityType, 3)
+    for i := range(ancestorsOfA) {
+        ancestorsOfA[i] = new(EntityType)
+        ancestorsOfA[i].Initialize()
+        if i == 0 {
+            A.parent = ancestorsOfA[0]
+        } else {
+            ancestorsOfA[i-1].parent = ancestorsOfA[i]
+        }
+        if ClosestAncestor(A, ancestorsOfA[i]) != ancestorsOfA[i] {
+            t.Errorf("Ancestors should be the closest ancestor between themselves and their descendant")
+        }
+        if ClosestAncestor(ancestorsOfA[i], A) != ancestorsOfA[i] {
+            t.Errorf("Ancestors should be the closest ancestor between themselves and their descendant")
+        }
+    }
+}

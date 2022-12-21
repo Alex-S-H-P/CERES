@@ -153,3 +153,50 @@ func (e *EntityInstance) Equal(other utils.Equalable) bool {
         return e == o
     } else {return false}
 }
+
+// returns the lowest entityType such that e1 and e2 descend from it
+// if none are found, returns nil
+// if e1 and e2 are entityType and equal, they return themselves
+func ClosestAncestor(e1, e2 Entity)*EntityType {
+
+    var m1, m2 map[*EntityType]bool = make(map[*EntityType]bool), make(map[*EntityType]bool)
+
+    var head1, head2*EntityType
+    if et1, ok := e1.(*EntityType); ok {
+        head1 = et1
+    } else {
+        head1 = e1.directTypeOf()
+    }
+
+    if et2, ok := e2.(*EntityType); ok {
+        head2 = et2
+    } else {
+        head2 = e2.directTypeOf()
+    }
+
+    for {
+        if head1 == head2 {return head1}
+
+        if head1 != nil {
+            if _, ok := m2[head1];ok {
+                return head1
+            }
+            m1[head1] = true
+        }
+
+
+        if head2 != nil {
+            if _, ok2 := m1[head2];ok2 {
+                return head2
+            }
+            m2[head2] = true
+        }
+        if head1 != nil {
+            head1 = head1.directTypeOf()
+        }
+        if head2 != nil {
+            head2 = head2.directTypeOf()
+        }
+    }
+    return nil
+}
