@@ -2,6 +2,7 @@ package ceres
 
 import (
     "sync"
+    "CERES/src/utils"
 )
 type ICS struct {
     entityDictionary map[Word]*DictionaryEntry
@@ -21,6 +22,24 @@ func (ics *ICS)Initialize(master *CERES) {
 type DictionaryEntry struct {
     entities []Entity
     DEMutex sync.RWMutex
+}
+
+/*
+Returns all entities in the form of a generator.
+May return an entity multiple time
+*/
+func (ics*ICS)allEntities() utils.Generator[Entity] {
+    var mg *utils.MapGenerator[Word,*DictionaryEntry]
+    // we look at all of the values
+    key_gen := mg.Values(ics.entityDictionary)
+    // for each value, we can access its entities attribute
+    transform := func(de*DictionaryEntry)[]Entity {return de.entities}
+    // we therefore have a generator of slice of entities
+    entities_slice_gen := utils.Transform[*DictionaryEntry, []Entity](key_gen, transform)
+    // and we can parse through a slice
+    mesa_parser := func(s[]Entity)utils.Generator[Entity] {return utils.SliceGenerator[Entity](s)}
+    // we combine them and return the last one
+    return utils.Combine[[]Entity, Entity](entities_slice_gen, mesa_parser)
 }
 
 func (ics *ICS)createEntityType(w Word) *EntityType {
