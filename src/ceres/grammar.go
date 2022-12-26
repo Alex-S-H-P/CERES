@@ -79,3 +79,21 @@ func (g*grammar)internalassign(a, b group) []group {
     }
     return slice
 }
+
+func (g*grammar) RefreshAllGroups(ics*ICS) {
+    gen := ics.allEntities()
+    for {
+        e,done := gen.Next()
+        if done {return}
+
+        if et, ok := e.(*EntityType);ok {
+            if et.grammar_group.instanceSolver == nil {
+                et.grammar_group.instanceSolver = et
+            } else if IsTypeOf(e, et.grammar_group.instanceSolver) {
+                ancestor := ClosestAncestor(e, et.grammar_group.instanceSolver)
+                et.grammar_group.instanceSolver = ancestor
+            }
+        }
+    }
+
+}
