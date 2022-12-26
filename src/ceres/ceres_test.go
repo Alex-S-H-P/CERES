@@ -159,6 +159,13 @@ func TestCERES_Saving(t *testing.T) {
             }
         }
     }
+
+    c2.grammar.RefreshAllGroups(&(c2.ics))
+    for _, rootC := range *c2.root.children {
+        if !rootC.(*EntityType).grammar_group.instanceSolver.Equal(rootC) {
+            t.Error("Ancestors are not given their own grammar_group")
+        }
+    }
 }
 
 func TestRuleMatcher(t*testing.T) {
