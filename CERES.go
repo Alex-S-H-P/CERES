@@ -14,7 +14,7 @@ import (
 
 func main() {
 
-    conf := config.GetConfig("/var/config/general.yaml")
+    conf := config.GetConfig("./var/config/general.yaml")
     pprint.PrintHLine('=')
     path_to_pipe := conf.Path_to_not + conf.Path_to_pipe
 
