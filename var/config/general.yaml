@@ -1,0 +1,11 @@
+# the version of
+version: "0"
+# Path to not's "var" directory.
+# By default, this directory contains all pipes (the pipe_path directory)
+# By default, not adds a symbolic link to HOME named .notvar.
+#        You may change this by rewriting the Makefile of NOT
+#        However, having such a link does allow you to store NOT wherever you want.
+path_to_not: "~/.notvar/"
+# where in the "var" directory the "pipe" directory is.
+# By default, this is dir'ectly in var. 
+path_to_pipe: "pipe"
