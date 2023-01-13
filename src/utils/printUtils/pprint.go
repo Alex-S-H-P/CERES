@@ -35,7 +35,7 @@ const (
 // returns a colorized version of s
 // if it fails to read the color, returns the initial string
 func Color(s, color string) string {
-	colors := strings.Split(color, " ")
+	colors := strings.Split(strings.ToLower(color), " ")
 	var code string   = "\033["
 	var first_el bool = true
 
