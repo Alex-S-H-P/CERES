@@ -7,5 +7,5 @@ version: "0"
 #        However, having such a link does allow you to store NOT wherever you want.
 path_to_not: "~/.notvar/"
 # where in the "var" directory the "pipe" directory is.
-# By default, this is dir'ectly in var. 
-path_to_pipe: "pipe"
+# By default, this is dir'ectly in var.
+path_to_pipe: "pipe/"
