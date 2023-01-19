@@ -33,10 +33,14 @@ func (ei *EntityInstance) Initialize() {
 }
 
 func (ei *EntityInstance) directTypeOf() []*EntityType{
+    if ei == nil {return nil}
+
     return []*EntityType{ei.typeOf}
 }
 
 func (et *EntityType) directTypeOf() []*EntityType{
+    if et == nil {return nil}
+
     answ := make([]*EntityType, len(et.links)/2)
     for _, link := range et.links {
         if hypo, ok := link.(HYPERNYMY); ok {
