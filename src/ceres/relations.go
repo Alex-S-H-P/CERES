@@ -101,3 +101,25 @@ func (h HOLONYMY)GetB() Entity {
 func (h HOLONYMY) set(A, B Entity) Link {
     return HOLONYMY{A:A, B:B}
 }
+
+
+// A == -B
+type ANTONYMY struct {
+    A, B Entity
+}
+
+func (a ANTONYMY) reverse() Link {
+    return ANTONYMY{A:a.B, B:a.A}
+}
+
+func (a ANTONYMY) GetA() Entity {
+    return a.A
+}
+
+func (a ANTONYMY) GetB() Entity {
+    return a.B
+}
+
+func (a ANTONYMY) set(A, B Entity) Link {
+    return ANTONYMY{A:A, B:B}
+}
