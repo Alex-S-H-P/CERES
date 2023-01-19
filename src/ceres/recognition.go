@@ -23,7 +23,7 @@ func (re *RecognizedEntity) Initialize()  {}
 /*
 RE implements Entity
 */
-func (re *RecognizedEntity) directTypeOf() *EntityType{
+func (re *RecognizedEntity) directTypeOf() []*EntityType{
     return re.entity.directTypeOf()
 }
 
@@ -43,7 +43,7 @@ func (re *RecognizedEntity) GetGrammarGroup() group {
     case *EntityType:
         return re.entity.(*EntityType).grammar_group
     default:
-        return re.entity.directTypeOf().grammar_group
+        return re.entity.directTypeOf()[0].grammar_group
     }
 }
 

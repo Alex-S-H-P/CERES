@@ -30,9 +30,9 @@ func TestCeres_TypeAdding(t *testing.T){
     c := new(CERES)
     c.Initialize(1)
     c.createEntityType("caracteristic")
-    if len(*c.root.children) != 1 {
+    if len(c.root.links) != 1 {
         t.Errorf("Created a child for the root, but the root did not care")
-    } else if (*c.root.children)[0].directTypeOf() == nil {
+    } else if (c.root.links)[0].GetB().directTypeOf() == nil {
         t.Errorf("Created a child that did not hook to its parent correctly")
     }
 
@@ -45,7 +45,7 @@ func TestICS_LevelsOfAbstractions(t *testing.T) {
     c.createEntityType("caracteristic")
     c.createEntityType("action")
     c.createEntityType("thing")
-    thing := (*c.root.children)[2].(*EntityType)
+    thing := (c.root.links)[2].GetB().(*EntityType)
     living_being := c.ics.createEntityType("living being")
     thing.addChild(living_being)
     box := c.ics.createEntityType("box")
@@ -91,7 +91,7 @@ func TestIsTypeOf(t *testing.T) {
     c.createEntityType("caracteristic")
     c.createEntityType("action")
     c.createEntityType("thing")
-    thing := (*c.root.children)[2].(*EntityType)
+    thing := (c.root.links)[2].GetB().(*EntityType)
     living_being := c.ics.createEntityType("living being")
     thing.addChild(living_being)
     box := c.ics.createEntityType("box")
@@ -126,11 +126,11 @@ func TestCERES_Saving(t *testing.T) {
     c.createEntityType(words[1])
     c.createEntityType(words[2])
 
-    thing := (*c.root.children)[2].(*EntityType)
+    thing := (c.root.links)[2].GetB().(*EntityType)
     thing.grammar_group = group{"NOUN", thing}
-    caracteristic := (*c.root.children)[1].(*EntityType)
+    caracteristic := (c.root.links)[1].GetB().(*EntityType)
     caracteristic.grammar_group = group{"ADJ", caracteristic}
-    action := (*c.root.children)[0].(*EntityType)
+    action := (c.root.links)[0].GetB().(*EntityType)
     action.grammar_group = group{"VERB", action}
 
     e := c.save(fileSpace)
@@ -144,7 +144,7 @@ func TestCERES_Saving(t *testing.T) {
     if e != nil {
         t.Error(e)
     }
-    if len(*c.root.children) != len(*c2.root.children) {
+    if len(c.root.links) != len(c2.root.links) {
         t.Fail()
     }
     for i, w := range words{
@@ -152,17 +152,17 @@ func TestCERES_Saving(t *testing.T) {
         if len(de.entities) != 1 {
             t.Errorf("The word %s was not saved correctly into the new CERES instance (%v)", w, de)
         } else {
-            if de.entities[0].(*EntityType).grammar_group.name != (*c.root.children)[i].(*EntityType).grammar_group.name {
+            if de.entities[0].(*EntityType).grammar_group.name != (c.root.links)[i].GetB().(*EntityType).grammar_group.name {
                 t.Errorf("Entity for \"%s\" was found in both original and copies, but they did not have the same grammar_groups [%s!=%s]",
                         w, de.entities[0].(*EntityType).grammar_group.name,
-                        (*c.root.children)[i].(*EntityType).grammar_group.name)
+                        (c.root.links)[i].GetB().(*EntityType).grammar_group.name)
             }
         }
     }
 
     c2.grammar.RefreshAllGroups(&(c2.ics))
-    for _, rootC := range *c2.root.children {
-        if !rootC.(*EntityType).grammar_group.instanceSolver.Equal(rootC) {
+    for _, rootC := range c2.root.links {
+        if !rootC.GetB().(*EntityType).grammar_group.instanceSolver.Equal(rootC.GetB()) {
             t.Error("Ancestors are not given their own grammar_group")
         }
     }
@@ -230,9 +230,9 @@ func TestClosestAncestor(t *testing.T) {
         ancestorsOfA[i] = new(EntityType)
         ancestorsOfA[i].Initialize()
         if i == 0 {
-            A.parent = ancestorsOfA[0]
+            A.directTypeOf()[0] = ancestorsOfA[0]
         } else {
-            ancestorsOfA[i-1].parent = ancestorsOfA[i]
+            ancestorsOfA[i-1].directTypeOf()[0] = ancestorsOfA[i]
         }
         if ClosestAncestor(A, ancestorsOfA[i]) != ancestorsOfA[i] {
             t.Errorf("Ancestors should be the closest ancestor between themselves and their descendant")
