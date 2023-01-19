@@ -136,3 +136,23 @@ func (a ANTONYMY) set(A, B Entity) Link {
 
 func (a ANTONYMY) typeOfLink() string {return "ANTONYM"}
 
+func SetList(listType string, A, B Entity) Link {
+    return FindListType(listType).set(A, B)
+}
+
+func FindListType(lt string) Link {
+    switch lt {
+    case "ANTONYM":
+        return ANTONYMY{}
+    case "HOLONYM":
+        return HOLONYMY{}
+    case "MERONYM":
+        return MERONYMY{}
+    case "HYPERNYM":
+        return HYPERNYMY{}
+    case "HYPONYM":
+        return HYPNOMY{}
+    default:
+        return nil
+    }
+}
