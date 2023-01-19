@@ -163,7 +163,7 @@ func (et *EntityType) addLink(emptyLink Link, destination Entity) (int, error) {
 }
 
 func (ei*EntityInstance) addLink(emptyLink Link, destination Entity) (int, error) {
-    _, is_hypnomy := emptyLink.(HYPNOMY)
+    _, is_hypnomy := emptyLink.(HYPONYMY)
     destination_as_class, ok := destination.(*EntityType)
     if is_hypnomy && ok && ei.typeOf == nil {
         ei.typeOf = destination_as_class

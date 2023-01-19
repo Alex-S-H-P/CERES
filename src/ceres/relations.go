@@ -2,30 +2,30 @@ package ceres
 
 
 // A is a subclass of B
-type HYPNOMY struct{
+type HYPONYMY struct{
     A Entity
     B *EntityType
 }
 
-func (h HYPNOMY) reverse() Link {
+func (h HYPONYMY) reverse() Link {
     return HYPERNYMY{A:h.B, B:h.A}
 }
 
-func (h HYPNOMY) GetA() Entity {
+func (h HYPONYMY) GetA() Entity {
     return h.A
 }
 
-func (h HYPNOMY) GetB() Entity {
+func (h HYPONYMY) GetB() Entity {
     return h.B
 }
 
-func (h HYPNOMY) set(A, B Entity) Link {
+func (h HYPONYMY) set(A, B Entity) Link {
     h.A = A
     h.B = B.(*EntityType)
     return h
 }
 
-func (h HYPNOMY) typeOfLink() string {return "HYPNOM"}
+func (h HYPONYMY) typeOfLink() string {return "HYPONYM"}
 
 // A is the superclass of B
 type HYPERNYMY struct {
@@ -34,7 +34,7 @@ type HYPERNYMY struct {
 }
 
 func (h HYPERNYMY) reverse() Link {
-    return HYPNOMY{A:h.B, B:h.A}
+    return HYPONYMY{A:h.B, B:h.A}
 }
 
 func (h HYPERNYMY) GetA() Entity {
@@ -151,7 +151,7 @@ func FindListType(lt string) Link {
     case "HYPERNYM":
         return HYPERNYMY{}
     case "HYPONYM":
-        return HYPNOMY{}
+        return HYPONYMY{}
     default:
         return nil
     }
