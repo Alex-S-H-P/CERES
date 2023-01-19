@@ -25,6 +25,8 @@ func (h HYPNOMY) set(A, B Entity) Link {
     return h
 }
 
+func (h HYPNOMY) typeOfLink() string {return "HYPNOM"}
+
 // A is the superclass of B
 type HYPERNYMY struct {
     A *EntityType
@@ -49,6 +51,8 @@ func (h HYPERNYMY) set(A, B Entity) Link {
     return h
 }
 
+func (h HYPERNYMY) typeOfLink() string {return "HYPERNYM"}
+
 type Link interface {
     reverse()Link
     GetA()Entity
@@ -56,6 +60,9 @@ type Link interface {
 
     // returns a new link that is set.
     set (Entity, Entity) Link
+
+    // Ability to say what type of link you are
+    typeOfLink() string
 }
 
 // A is a part of B
@@ -80,6 +87,8 @@ func (m MERONYMY) set(A, B Entity) Link {
     return MERONYMY{A:A, B:B}
 }
 
+func (m MERONYMY) typeOfLink() string {return "MERONYM"}
+
 // A contains B
 type HOLONYMY struct {
     A Entity
@@ -102,6 +111,7 @@ func (h HOLONYMY) set(A, B Entity) Link {
     return HOLONYMY{A:A, B:B}
 }
 
+func (h HOLONYMY) typeOfLink() string {return "HOLONYM"}
 
 // A == -B
 type ANTONYMY struct {
@@ -123,3 +133,6 @@ func (a ANTONYMY) GetB() Entity {
 func (a ANTONYMY) set(A, B Entity) Link {
     return ANTONYMY{A:A, B:B}
 }
+
+func (a ANTONYMY) typeOfLink() string {return "ANTONYM"}
+
