@@ -43,7 +43,7 @@ func (et *EntityType) directTypeOf() []*EntityType{
 
     answ := make([]*EntityType, len(et.links)/2)
     for _, link := range et.links {
-        if hypo, ok := link.(HYPERNYMY); ok {
+        if hypo, ok := link.(HYPONYMY); ok {
             answ = append(answ, hypo.GetB().(*EntityType))
         }
     }
