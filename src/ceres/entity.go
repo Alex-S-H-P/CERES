@@ -77,6 +77,9 @@ type Entity interface {
     GetNumber() int8
     GetGender() int8
     removeLink(int)
+
+    // loading and saving methods
+    store(int, map[Entity]int, *[]byte) string
 }
 
 /*

@@ -273,6 +273,36 @@ func indexEntity(e Entity, m map[Entity]int) (int, bool) {
 	return n, true
 }
 
+func (et*EntityType) store(i int, m map[Entity]int, entityDict *[]byte) string {
+	var s string = "␟type␣" + strconv.Itoa(i)
+	fmt.Println("Indexing", et, "...")
+	for _, link := range et.links {
+		s += fmt.Sprintf("%s-%d␣", link.typeOfLink(),
+					safeIndexEntity(link.GetB(), m, entityDict))
+	}
+	for _, attr := range et.attributes.attrs {
+		fmt.Println("Attr ::", attr)
+		s += "@" + strconv.Itoa(
+					safeIndexEntity(attr, m, entityDict)) + UnderSEP
+	}
+	s += et.grammar_group.String() + UnderSEP
+
+	return s
+}
+
+func (ei*EntityInstance) store(i int, m map[Entity]int, entityDict *[]byte) string {
+	var s string
+	s = "␟inst␣" + strconv.Itoa(safeIndexEntity(ei, m, entityDict)) + "␣" +
+	strconv.Itoa(safeIndexEntity(ei.typeOf, m, entityDict)) + "␣"
+	for _, attr := range ei.values.attrs {
+		val := ei.values.values[attr]
+		s += strconv.Itoa(safeIndexEntity(attr, m, entityDict)) + ":" +
+		string(val) + "␣"
+	}
+
+	return s
+}
+
 /*
 Returns an index for every entity, while adding the description of the entity to a slice.
 
@@ -285,32 +315,8 @@ func safeIndexEntity(e Entity, m map[Entity]int, entityDict *[]byte) int {
 
 	i, ok := indexEntity(e, m)
 	if ok { // we have a new entity. Let's add it to the list,
-		var s string
-		switch e.(type) {
-		case *EntityType:
-			et := e.(*EntityType)
-			fmt.Println("Indexing", et, "...")
-			if et.parent != nil {
-				s = "␟type␣" + strconv.Itoa(i) + "␣" +
-					strconv.Itoa(safeIndexEntity(et.parent, m, entityDict)) + UnderSEP
-			} else {
-				s = "␟type␣" + strconv.Itoa(i) + "␣-1␣"
-			}
-			for _, attr := range et.attributes.attrs {
-				fmt.Println("Attr ::", attr)
-				s += strconv.Itoa(safeIndexEntity(attr, m, entityDict)) + UnderSEP
-			}
-			s += et.grammar_group.String() + UnderSEP
-		case *EntityInstance:
-			ei := e.(*EntityInstance)
-			s = "␟inst␣" + strconv.Itoa(safeIndexEntity(ei, m, entityDict)) + "␣" +
-				strconv.Itoa(safeIndexEntity(ei.typeOf, m, entityDict)) + "␣"
-			for _, attr := range ei.values.attrs {
-				val := ei.values.values[attr]
-				s += strconv.Itoa(safeIndexEntity(attr, m, entityDict)) + ":" +
-					string(val) + "␣"
-			}
-		}
+		var s string = e.store(i ,m, entityDict)
+
 		s = strings.TrimSuffix(s, "␣")
 		if len(*entityDict) == 0 {
 			s = strings.TrimPrefix(s, "␟")
