@@ -113,7 +113,7 @@ func lAB_internal(e *EntityType, f Entity) (int, error) {
 
     parents := f.directTypeOf()
 
-    var minLAB int = 0
+    var minLAB int = 1<<30
     var minError error = fmt.Errorf("e is not type of f")
 
     for _, parent := range parents {
@@ -131,10 +131,21 @@ func lAB_type_checked(e, f Entity) (int, error){
     if E, ok := e.(*EntityType); ok {
         return lAB_internal(E, f)
     } else {
-        return -1, fmt.Errorf("Could not convert to entity type")
+        return 0, fmt.Errorf("Could not convert to entity type")
     }
 }
 
+
+/*
+Returns how many ancestors you need to go up to find e going from f.
+The result can be negative if f is an ancestor of e instead.
+
+May return a non-nil error:
+  - if the data is not set correctly,
+  - if there is no link between e and f
+
+In which case the integer returned is the number of ancestors checked.
+*/
 func LevelsOfAbstractionBetween(e, f Entity) (int, error) {
     if e.Equal(f) {
         return 0, nil
