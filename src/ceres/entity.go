@@ -217,15 +217,29 @@ func (ei*EntityInstance) addLink(emptyLink Link, destination Entity) (int, error
     return len(ei.otherLinks)-1, nil
 }
 
+// adds a link between source and destination..
+// You can pass an empty link to specify the type of the link
 func AddLink(emptyLink Link, source, destination Entity) error {
-    i, err := source.addLink(emptyLink, destination)
-    if err != nil {
-        return err
+    var i int
+    var err error
+    var canRemove bool
+
+    if !source.hasLink(emptyLink, destination) {
+        i, err = source.addLink(emptyLink, destination)
+        if err != nil {
+            return err
+        }
+        canRemove = true
     }
-    _, err = destination.addLink(emptyLink.reverse(), source)
-    if err != nil {
-        source.removeLink(i)
-        return err
+
+    if !destination.hasLink(emptyLink.reverse(), source) {
+        _, err = destination.addLink(emptyLink.reverse(), source)
+        if err != nil {
+            if canRemove {
+                source.removeLink(i)
+            }
+            return err
+        }
     }
 
     return nil
