@@ -230,9 +230,9 @@ func TestClosestCommonAncestor(t *testing.T) {
         ancestorsOfA[i] = new(EntityType)
         ancestorsOfA[i].Initialize()
         if i == 0 {
-            A.directTypeOf()[0] = ancestorsOfA[0]
+            ancestorsOfA[0].addChild(A)
         } else {
-            ancestorsOfA[i-1].directTypeOf()[0] = ancestorsOfA[i]
+            ancestorsOfA[i].addChild(A)
         }
         if ClosestCommonAncestor(A, ancestorsOfA[i]) != ancestorsOfA[i] {
             t.Errorf("Ancestors should be the closest ancestor between themselves and their descendant")
