@@ -90,7 +90,7 @@ func (g*grammar) RefreshAllGroups(ics*ICS) {
             if et.grammar_group.instanceSolver == nil {
                 et.grammar_group.instanceSolver = et
             } else if IsTypeOf(e, et.grammar_group.instanceSolver) {
-                ancestor := ClosestAncestor(e, et.grammar_group.instanceSolver)
+                ancestor := ClosestCommonAncestor(e, et.grammar_group.instanceSolver)
                 et.grammar_group.instanceSolver = ancestor
             }
         }

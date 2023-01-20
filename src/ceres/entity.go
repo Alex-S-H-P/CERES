@@ -288,7 +288,7 @@ func (e *EntityInstance) Equal(other utils.Equalable) bool {
 // returns the lowest entityType such that e1 and e2 descend from it
 // if none are found, returns nil
 // if e1 and e2 are entityType and equal, they return themselves
-func ClosestAncestor(e1, e2 Entity)*EntityType {
+func ClosestCommonAncestor(e1, e2 Entity)*EntityType {
     var head1, head2 *EntityType
     if et1, ok := e1.(*EntityType); ok {
         head1 = et1

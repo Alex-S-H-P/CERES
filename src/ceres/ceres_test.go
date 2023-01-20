@@ -219,10 +219,10 @@ func TestCYK(t*testing.T){
     table.display_tree(0)
 }
 
-func TestClosestAncestor(t *testing.T) {
+func TestClosestCommonAncestor(t *testing.T) {
     A := new(EntityType)
     A.Initialize()
-    if ClosestAncestor(A, A) != A {
+    if ClosestCommonAncestor(A, A) != A {
         t.Errorf("Equal types aren't their own closest ancestor (they should be)")
     }
     ancestorsOfA := make([]*EntityType, 3)
@@ -234,10 +234,10 @@ func TestClosestAncestor(t *testing.T) {
         } else {
             ancestorsOfA[i-1].directTypeOf()[0] = ancestorsOfA[i]
         }
-        if ClosestAncestor(A, ancestorsOfA[i]) != ancestorsOfA[i] {
+        if ClosestCommonAncestor(A, ancestorsOfA[i]) != ancestorsOfA[i] {
             t.Errorf("Ancestors should be the closest ancestor between themselves and their descendant")
         }
-        if ClosestAncestor(ancestorsOfA[i], A) != ancestorsOfA[i] {
+        if ClosestCommonAncestor(ancestorsOfA[i], A) != ancestorsOfA[i] {
             t.Errorf("Ancestors should be the closest ancestor between themselves and their descendant")
         }
     }
