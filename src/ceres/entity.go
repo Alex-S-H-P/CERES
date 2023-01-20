@@ -109,9 +109,7 @@ func IsTypeOf(e Entity, t *EntityType) bool {
 
 
 func lAB_internal(e *EntityType, f Entity) (int, error) {
-    if F, ok := f.(*EntityType); ok && e.Equal(F){
-        return 0, nil
-    }
+    if e.Equal(f) {return 0, nil}
 
     parents := f.directTypeOf()
 
@@ -125,7 +123,7 @@ func lAB_internal(e *EntityType, f Entity) (int, error) {
             minError = err
         }
     }
-
+    fmt.Printf("lAB_internal on %s - %v.\n\tGot %v, %s\n", e.word, f, minLAB, minError)
     return minLAB, minError
 }
 
@@ -138,14 +136,13 @@ func lAB_type_checked(e, f Entity) (int, error){
 }
 
 func LevelsOfAbstractionBetween(e, f Entity) (int, error) {
-    E, ok1 := e.(*EntityInstance)
-    F, ok2 := f.(*EntityInstance)
+    if e.Equal(f) {
+        return 0, nil
+    }
+    _, ok1 := e.(*EntityInstance)
+    _, ok2 := f.(*EntityInstance)
     if ok1 && ok2 {
-        if E.Equal(F) {
-            return 0, nil
-        } else {
-            return 1, fmt.Errorf("Both entities checked to compute levels of abstractions are instances. They are not equal.")
-        }
+        return 1, fmt.Errorf("Both entities checked to compute levels of abstractions are instances. They are not equal.")
     } else {
         a, err := lAB_type_checked(e, f)
         if err != nil {
