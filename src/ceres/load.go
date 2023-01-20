@@ -42,13 +42,13 @@ func (c *CERES) load(fn string) error {
 	if err != nil {return err}
 
 	solver := c.ics.load(b1, b2, c.grammar.groups)
-	fmt.Println(c, "\n", c.root)
+	//fmt.Println(c, "\n", c.root)
 	c.grammar.resolve_future_actions_on_loading(solver, future_action_groups)
 
 	c.pcs.load(b3)
-	fmt.Println(c)
+	//fmt.Println(c)
 	c.ucs.load(b4)
-	fmt.Println(c)
+	//fmt.Println(c)
 	return err
 }
 
@@ -75,7 +75,6 @@ func (et*EntityType) load(c[]string,
 			continue
 		case len(c[i])>1 &&c[i][0]!= '@':
 			d := strings.Split(c[i], "-")
-			fmt.Println(d)
 			typeOfLink,linkTo_string := d[0], d[1]
 			linkTo, err := strconv.Atoi(linkTo_string)
 			destinationFound := m[linkTo]
@@ -85,8 +84,10 @@ func (et*EntityType) load(c[]string,
 			}
 			if err != nil {panic(err)}
 
-			fmt.Println(FindListType(typeOfLink), typeOfLink, m[linkTo])
-			link := FindListType(typeOfLink).set(et, m[linkTo])
+			/*fmt.Println("CURRENT", c[0], c[1], "#", typeOfLink, linkTo, "#",
+				FindListType(typeOfLink).typeOfLink(),
+				"\""+typeOfLink+"\"",
+				destinationFound)*/
 			link := FindListType(typeOfLink).set(et, destinationFound)
 			et.links = append(et.links, link)
 		}
@@ -194,7 +195,7 @@ func (pcs*PCS)load(b*[]byte){
 	C := strings.Split(string(*b), UnderSEP)
 	fmt.Println(C, b, len(C), len(*b))
 	for _, c := range C {
-		fmt.Println("LOADING PCS", c)
+		//fmt.Println("LOADING PCS", c)
 		w := Word(c[:len(c)-2])
 		gnp := rune(c[len(c)-2])
 		t, err := strconv.Atoi(string(c[len(c)-1]))
@@ -231,7 +232,7 @@ func grammar_load(path string) (*grammar, map[string]int, error) {
 		if len(line) == 0 {continue}
 
 		sline := strings.Split(line, UnitSEP)
-		fmt.Printf("loader : \"%s\"=>\"%s\", \"%s\"\n", line, sline[0], sline[1])
+		//fmt.Printf("loader : \"%s\"=>\"%s\", \"%s\"\n", line, sline[0], sline[1])
 
 		if len(sline) != 2 {
 			return nil, nil, fmt.Errorf("Cannot process line \"%s\" (%v elements found instead of 2)", line, len(sline))
@@ -242,7 +243,7 @@ func grammar_load(path string) (*grammar, map[string]int, error) {
 		}
 		if len(sline[1]) != 0 { // we give an entityInstance -> group link
 			b := strings.Split(sline[1], ">")
-			fmt.Println(b[0], "|>", b[1])
+			//fmt.Println(b[0], "|>", b[1])
 			id, err := strconv.Atoi(b[1])
 			if err != nil {
 				return nil, nil, fmt.Errorf("Could not extract entityID :%s", err.Error())
@@ -256,11 +257,11 @@ func grammar_load(path string) (*grammar, map[string]int, error) {
 }
 
 func (g*grammar) resolve_future_actions_on_loading(solver map [int]Entity, future_actions map[string]int){
-	fmt.Println("resolver : ", solver, future_actions)
+	//fmt.Println("resolver : ", solver, future_actions)
 	for name, entityID := range future_actions {
 		et := solver[entityID].(*EntityType)
 		et.grammar_group = g.find(name)
-		fmt.Printf("resolver \"%s\" : %v for %v\n", name, entityID, et)
+		//fmt.Printf("resolver \"%s\" : %v for %v\n", name, entityID, et)
 	}
 }
 
@@ -324,7 +325,7 @@ func indexEntity(e Entity, m map[Entity]int) (int, bool) {
 
 func (et*EntityType) store(i int, m map[Entity]int, entityDict *[]byte) string {
 	var s string = "␟type␣" + strconv.Itoa(i) + UnderSEP
-	fmt.Println("Indexing", et, "...")
+	//fmt.Println("Indexing", et, "...")
 	for _, link := range et.links {
 		s += fmt.Sprintf("%s-%d␣", link.typeOfLink(),
 					safeIndexEntity(link.GetB(), m, entityDict))
@@ -371,7 +372,7 @@ func safeIndexEntity(e Entity, m map[Entity]int, entityDict *[]byte) int {
 		if len(*entityDict) == 0 {
 			s = strings.TrimPrefix(s, "␟")
 		}
-		fmt.Println("Adding", s+"("+strconv.Itoa(len(s))+") to", string(*entityDict))
+		//fmt.Println("Adding", s+"("+strconv.Itoa(len(s))+") to", string(*entityDict))
 		*entityDict = append(*entityDict, []byte(s[:len(s)])...)
 	}
 	return i
@@ -382,7 +383,7 @@ func (ics *ICS) save() ([]byte, []byte, map[Entity]int, error) {
 	var m map[Entity]int = make(map[Entity]int)
 	var initial bool = true
 	for w, entries := range ics.entityDictionary {
-		fmt.Println("entry [\""+string(w)+"\"]->", entries)
+		//fmt.Println("entry [\""+string(w)+"\"]->", entries)
 		if !initial {
 			b1 = append(b1, []byte(UnitSEP)...)
 		}
@@ -396,7 +397,7 @@ func (ics *ICS) save() ([]byte, []byte, map[Entity]int, error) {
 			} else {
 				understood = "␣" + string(w) + "⚯" + strconv.Itoa(i)
 			}
-			fmt.Println("EDITING B1 :", understood, first)
+			//fmt.Println("EDITING B1 :", understood, first)
 			first = false
 			b1 = append(b1, []byte(understood)...)
 		}
