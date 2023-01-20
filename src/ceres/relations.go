@@ -1,5 +1,9 @@
 package ceres
 
+import (
+    "fmt"
+)
+
 
 // A is a subclass of B
 type HYPONYMY struct{
@@ -153,6 +157,6 @@ func FindListType(lt string) Link {
     case "HYPONYM":
         return HYPONYMY{}
     default:
-        return nil
+        panic(fmt.Sprintf("Cannot validate %v as a link type (choose between ANTONYM, HOLONYM, MERONYM, HYPERNYM, HYPONYM", lt))
     }
 }
