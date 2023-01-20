@@ -52,6 +52,78 @@ func (c *CERES) load(fn string) error {
 	return err
 }
 
+
+func (et*EntityType) load(c[]string,
+			grammar_groups map[string]group,
+			m map[int] Entity) {
+	et.attributes = new(AttributeTypeList)
+	et.links = make([]Link, 0, len(c))
+	var i int = 2
+	fmt.Println(c)
+	for i < len(c)-2 {
+
+		fmt.Println(i, ">", c[i])
+		switch {
+		case len(c[i]) > 2 && c[i][0] == '@':
+			attribute, err := strconv.Atoi(c[i])
+			if err != nil {panic(err)}
+
+			et.attributes.attrs = append(et.attributes.attrs,
+				m[attribute].(*EntityType))
+		case len(c[i]) > 1 && c[i][0] == '@':
+			i++
+			continue
+		case len(c[i])>1 &&c[i][0]!= '@':
+			d := strings.Split(c[i], "-")
+			fmt.Println(d)
+			typeOfLink,linkTo_string := d[0], d[1]
+			linkTo, err := strconv.Atoi(linkTo_string)
+			if err != nil {panic(err)}
+
+			fmt.Println(FindListType(typeOfLink), typeOfLink, m[linkTo])
+			link := FindListType(typeOfLink).set(et, m[linkTo])
+			et.links = append(et.links, link)
+		}
+		i++
+	}
+	et.word = Word(c[len(c)-2])
+	et.grammar_group = grammar_groups[c[len(c)-1]]
+}
+
+func (ei*EntityInstance) load(c[]string,
+			grammar_groups map[string]group,
+			m map[int] Entity) {
+
+	ei.values = new(AttributeInstanceList)
+	ei.values.values = make(map[*EntityType]Word)
+	typeOfIndex, err := strconv.Atoi(c[1])
+	if err != nil { panic(err)	}
+	ei.typeOf = m[typeOfIndex].(*EntityType)
+	for _, attrSegment := range c[2:] {
+		d := strings.SplitN(attrSegment, ":", 2)
+
+		attrIndex, err := strconv.Atoi(d[0])
+		if err != nil {panic(err)}
+
+		var attr *EntityType = m[attrIndex].(*EntityType)
+		ei.values.values[attr] = Word(d[1])
+	}
+}
+
+func newEntityToLoad(fields []string) Entity {
+	switch fields[0] {
+	case "type":
+		et := new(EntityType)
+		return et
+	case "inst":
+		ei := new(EntityInstance)
+		return ei
+	default:
+		panic(fmt.Sprintf("Bad entity category \"%s\" (either \"inst\" or \"type\")",  fields[0]))
+	}
+}
+
+
 /*
 Loads ics.
 
@@ -67,50 +139,17 @@ func (ics*ICS)load(b1,b2 *[]byte, grammar_groups map[string]group) map[int]Entit
 		if err != nil {
 			panic(err)
 		}
-		parent_index, err := strconv.Atoi(c[2])
+		m[index] = newEntityToLoad(c)
+	}
+	for _, descr := range C {
+		c := strings.Split(descr, UnderSEP)
+		index, err := strconv.Atoi(c[1])
 		if err != nil {
 			panic(err)
 		}
-		var e Entity
-		switch c[0] {
-		case "type":
-			et := new(EntityType)
-			if parent_index >= 0 {
-				m[parent_index].(*EntityType).addChild(et)
-			} else {
-				ics.master.root = et
-				ics.master.ucs.ceres_main = et
-				fmt.Println("Setting root", et)
-			}
-			e = Entity(et)
-			et.attributes = new(AttributeTypeList)
-			fmt.Println(c[0], "|", c[1], "|", c[2], "||", c[3:len(c)-1], "||", c[len(c)-1])
-			for i := 3; i<len(c)-1; i++ {
-				Cidx, err := strconv.Atoi(c[i])
-				if err != nil {
-					panic(err)
-				}
-				et.attributes.attrs = append(et.attributes.attrs, m[Cidx].(*EntityType))
-			}
-			et.grammar_group = grammar_groups[c[len(c)-1]]
-		case "inst":
-			ei := new(EntityInstance)
-			m[parent_index].(*EntityType).addChild(ei)
-			e = Entity(ei)
-			ei.values = new(AttributeInstanceList)
-			for i := 3; i<len(c); i++ {
-				d := strings.SplitN(c[i], ":", 2)
-				Cidx, err := strconv.Atoi(d[0])
-				if err != nil {
-					panic(err)
-				}
-				attr := m[Cidx].(*EntityType)
-				ei.values.attrs = append(ei.values.attrs, attr)
-				ei.values.values[attr] = Word(d[1])
-			}
-		}
-		m[index] = e
+		m[index].load(c, grammar_groups, m)
 	}
+
 	// b2 set
 	// setting b1
 	B := strings.Split(string(*b1), UnitSEP)
@@ -274,7 +313,7 @@ func indexEntity(e Entity, m map[Entity]int) (int, bool) {
 }
 
 func (et*EntityType) store(i int, m map[Entity]int, entityDict *[]byte) string {
-	var s string = "␟type␣" + strconv.Itoa(i)
+	var s string = "␟type␣" + strconv.Itoa(i) + UnderSEP
 	fmt.Println("Indexing", et, "...")
 	for _, link := range et.links {
 		s += fmt.Sprintf("%s-%d␣", link.typeOfLink(),
@@ -285,6 +324,7 @@ func (et*EntityType) store(i int, m map[Entity]int, entityDict *[]byte) string {
 		s += "@" + strconv.Itoa(
 					safeIndexEntity(attr, m, entityDict)) + UnderSEP
 	}
+	s += string(et.word) + UnderSEP
 	s += et.grammar_group.String() + UnderSEP
 
 	return s
