@@ -148,6 +148,10 @@ func (ics*ICS)load(b1,b2 *[]byte, grammar_groups map[string]group) map[int]Entit
 			panic(err)
 		}
 		m[index].load(c, grammar_groups, m)
+
+		if len(m[index].directTypeOf()) == 0 {
+			ics.master.root = m[index].(*EntityType)
+		}
 	}
 
 	// b2 set
