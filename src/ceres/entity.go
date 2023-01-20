@@ -81,9 +81,11 @@ type Entity interface {
     GetNumber() int8
     GetGender() int8
     removeLink(int)
+    hasLink(Link, Entity) bool
 
     // loading and saving methods
     store(int, map[Entity]int, *[]byte) string
+
 }
 
 /*
@@ -156,6 +158,28 @@ func LevelsOfAbstractionBetween(e, f Entity) (int, error) {
         }
         return a, err
     }
+}
+
+func (et*EntityType) hasLink(linkType Link, destination Entity) bool {
+    for _, l := range et.links {
+        if l.typeOfLink() == linkType.typeOfLink() && l.GetB().Equal(destination){
+            return true
+        }
+    }
+    return false
+}
+
+func (ei*EntityInstance) hasLink(linkType Link, destination Entity) bool {
+    if linkType.typeOfLink() == "HYPONYM" {
+        return ei.typeOf == destination
+    }
+
+    for _, l := range ei.otherLinks {
+        if l.typeOfLink() == linkType.typeOfLink() && l.GetB().Equal(destination){
+            return true
+        }
+    }
+    return false
 }
 
 func (et*EntityType) addChild(childEntity Entity) error {
