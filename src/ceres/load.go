@@ -78,10 +78,16 @@ func (et*EntityType) load(c[]string,
 			fmt.Println(d)
 			typeOfLink,linkTo_string := d[0], d[1]
 			linkTo, err := strconv.Atoi(linkTo_string)
+			destinationFound := m[linkTo]
+			if destinationFound == nil {
+				panic(fmt.Sprintf("Could not find item @%v in %v",
+					linkTo, m))
+			}
 			if err != nil {panic(err)}
 
 			fmt.Println(FindListType(typeOfLink), typeOfLink, m[linkTo])
 			link := FindListType(typeOfLink).set(et, m[linkTo])
+			link := FindListType(typeOfLink).set(et, destinationFound)
 			et.links = append(et.links, link)
 		}
 		i++
