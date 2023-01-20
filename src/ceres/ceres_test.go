@@ -145,7 +145,8 @@ func TestCERES_Saving(t *testing.T) {
         t.Error(e)
     }
     if len(c.root.links) != len(c2.root.links) {
-        t.Fail()
+        t.Errorf("The copy does not have as many links as the original (%v instead of %v)",
+                    len(c2.root.links), len(c.root.links))
     }
     for i, w := range words{
         de := c2.ics.entityDictionary[w]
