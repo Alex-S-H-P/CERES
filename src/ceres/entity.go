@@ -85,7 +85,7 @@ type Entity interface {
 
     // loading and saving methods
     store(int, map[Entity]int, *[]byte) string
-
+    load([]string, map[string]group, map[int]Entity)
 }
 
 /*
