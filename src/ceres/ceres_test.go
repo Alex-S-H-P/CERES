@@ -187,7 +187,7 @@ func TestCYK(t*testing.T){
         MakeRecognizedEntity(Bt, false, false, nil, "B"),
         MakeRecognizedEntity(Ct, false, false, nil, "C")
 
-    var g grammar = grammar{rules:[]rule{ruleString("E -> B C"),
+    var g *grammar = &grammar{rules:[]rule{ruleString("E -> B C"),
                                          ruleString("D -> A E"),
                                          ruleString("B -> B"),
                                          ruleString("C -> C"),

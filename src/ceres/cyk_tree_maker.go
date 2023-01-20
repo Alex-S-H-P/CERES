@@ -65,7 +65,7 @@ func MakeCYKTable(n int) cyk_table{
 }
 
 
-func CYK_PARSE(sentence []RecognizedEntity, grammar grammar) cyk_table {
+func CYK_PARSE(sentence []RecognizedEntity, grammar *grammar) cyk_table {
     table := MakeCYKTable(len(sentence))
     table.display()
 
