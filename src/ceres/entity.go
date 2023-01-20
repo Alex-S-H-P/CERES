@@ -107,7 +107,6 @@ func IsTypeOf(e Entity, t *EntityType) bool {
     return false
 }
 
-
 func lAB_internal(e *EntityType, f Entity) (int, error) {
     if e.Equal(f) {return 0, nil}
 
@@ -117,13 +116,15 @@ func lAB_internal(e *EntityType, f Entity) (int, error) {
     var minError error = fmt.Errorf("e is not type of f")
 
     for _, parent := range parents {
+        if parent == nil { continue }
+
         i, err := lAB_internal(e, parent)
+        i ++
         if err == nil && ( i < minLAB || minError != nil) {
             minLAB = i
             minError = err
         }
     }
-    fmt.Printf("lAB_internal on %s - %v.\n\tGot %v, %s\n", e.word, f, minLAB, minError)
     return minLAB, minError
 }
 
