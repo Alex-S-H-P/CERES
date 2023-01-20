@@ -50,6 +50,7 @@ func (ics *ICS) allEntities() generator.Generator[Entity] {
 
 func (ics *ICS) createEntityType(w Word) *EntityType {
 	et := new(EntityType)
+	et.word = w
 	et.Initialize()
 
 	ics.eDMutex.RLock()
