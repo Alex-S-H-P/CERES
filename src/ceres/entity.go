@@ -41,7 +41,7 @@ func (ei *EntityInstance) directTypeOf() []*EntityType{
 func (et *EntityType) directTypeOf() []*EntityType{
     if et == nil {return nil}
 
-    answ := make([]*EntityType, len(et.links)/2)
+    answ := make([]*EntityType, 0, len(et.links)/2)
     for _, link := range et.links {
         if hypo, ok := link.(HYPONYMY); ok {
             answ = append(answ, hypo.GetB().(*EntityType))
