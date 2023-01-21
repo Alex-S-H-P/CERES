@@ -77,6 +77,14 @@ func MakeRecognizedEntity(e Entity, p bool, a bool, pr proposer, s string) Recog
 }
 
 type proposer interface {
-    proposeOptions(Word, *CTX) []RecognizedEntity
+    proposeOptions(Word, *CTX) []*RecognizedEntity
     computeP(RecognizedEntity, *CTX, ...RecognizedEntity) float64
+}
+
+func (re*RecognizedEntity) addLink(el Link, destination Entity) (int, error){
+    return re.entity.addLink(el, destination)
+}
+
+func (re*RecognizedEntity) removeLink(index int) {
+    re.entity.removeLink(index)
 }

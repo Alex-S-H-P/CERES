@@ -65,23 +65,25 @@ func (pcs *PCS)IsPronoun(w Word) bool{
     return ok
 }
 
-func (pcs*PCS)proposeOptions(w Word, ctx *CTX) []RecognizedEntity {
+func (pcs*PCS)proposeOptions(w Word, ctx *CTX) []*RecognizedEntity {
+    var re = new(RecognizedEntity)
+
     if pronoun, ok := pcs.pronounDictionary[w]; ok {
-        entities := make([]RecognizedEntity, 0, 64)
+        entities := make([]*RecognizedEntity, 0, 64)
         g, n, p := pronoun.GNP_Sep()
-        if p == PERSON1 && n == SINGULAR {
-            return []RecognizedEntity{MakeRecognizedEntity(ctx.SPEAKER,
-                    pronoun.Posessive, false, pcs, string(w))}
-        } else if p == PERSON2 {
-            return []RecognizedEntity{MakeRecognizedEntity(ctx.DESTINATOR,
-                 pronoun.Posessive, false, pcs, string(w))}
+        if (p == PERSON1 && n == SINGULAR) || (p == PERSON2){
+
+            *re = MakeRecognizedEntity(ctx.SPEAKER,
+                    pronoun.Posessive, false, pcs, string(w))
+            return []*RecognizedEntity{re}
         }
         for i := 0; i<ctx.expressed_buffer.Len(); i++ {
             buffered := ctx.expressed_buffer.Get(i)
             if buffered.GetGender() == g || g == UNKNOWN || buffered.GetGender() == UNKNOWN {
                 if buffered.GetNumber() == n {
-                    entities = append(entities, MakeRecognizedEntity(buffered,
-                        pronoun.Posessive, false, pcs, string(w)))
+                    *re = MakeRecognizedEntity(buffered,
+                        pronoun.Posessive, false, pcs, string(w))
+                    entities = append(entities, re)
                 }
             }
         }

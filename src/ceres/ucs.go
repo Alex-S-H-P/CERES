@@ -22,18 +22,19 @@ Due  to the specificicity of this proposer, it always returns a slice of only on
 
 Also, adds the element to the list of unrecognized_words
 */
-func (ucs*UCS)proposeOptions(w Word, ctx*CTX) []RecognizedEntity {
+func (ucs*UCS)proposeOptions(w Word, ctx*CTX) []*RecognizedEntity {
     fmt.Println("Adding unrecognized element", w, "to the UCS list")
+    var re *RecognizedEntity = new(RecognizedEntity)
 
     ei := new(EntityInstance)
     ei.typeOf = ucs.ceres_main
-    re := MakeRecognizedEntity(ei, false, false, ucs, string(w))
+    (*re) = MakeRecognizedEntity(ei, false, false, ucs, string(w))
 
     ucs.uwm.Lock()
     ucs.unrecognized_words = append(ucs.unrecognized_words, w)
     ucs.uwm.Unlock()
 
-    return []RecognizedEntity{re}
+    return []*RecognizedEntity{re}
 }
 
 func (ucs*UCS)computeP(re RecognizedEntity, ctx *CTX, previous...RecognizedEntity) float64{
