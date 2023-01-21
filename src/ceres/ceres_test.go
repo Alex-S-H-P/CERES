@@ -183,9 +183,11 @@ func TestRuleMatcher(t*testing.T) {
 func TestCYK(t*testing.T){
     var At, Bt, Ct *EntityType = new(EntityType),
         new(EntityType), new(EntityType)
-    var Ar, Br, Cr RecognizedEntity = MakeRecognizedEntity(At, false, false, nil, "A"),
+    var Ar, Br, Cr *RecognizedEntity = new(RecognizedEntity), new(RecognizedEntity), new(RecognizedEntity)
+    *Ar, *Br, *Cr = MakeRecognizedEntity(At, false, false, nil, "A"),
         MakeRecognizedEntity(Bt, false, false, nil, "B"),
         MakeRecognizedEntity(Ct, false, false, nil, "C")
+
 
     var g *grammar = &grammar{rules:[]rule{ruleString("E -> B C"),
                                          ruleString("D -> A E"),
@@ -194,7 +196,7 @@ func TestCYK(t*testing.T){
                                          ruleString("A -> A")},
                             groups:make(map[string]group)}
 
-    table := CYK_PARSE([]RecognizedEntity{Ar, Br, Cr}, g)
+    table := CYK_PARSE([]RecognizedEntity{*Ar, *Br, *Cr}, g)
 
     fmt.Println("                ")
     fmt.Println(table.rslt())
