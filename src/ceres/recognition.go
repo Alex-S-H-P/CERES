@@ -31,7 +31,10 @@ func (re *RecognizedEntity) directTypeOf() []*EntityType{
 Re implements Entity
 */
 func (re *RecognizedEntity) Equal(other utils.Equalable) bool {
-    return re.entity.Equal(other)
+    other_re, ok := other.(*RecognizedEntity)
+    if !ok {return false}
+
+    return re.entity.Equal(other_re.entity)
 }
 
 func (re *RecognizedEntity) GetNumber() int8 {return re.entity.GetNumber()}
