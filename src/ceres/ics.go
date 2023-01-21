@@ -93,19 +93,19 @@ func (ics *ICS) createEntityInstance(w Word, et *EntityType) *EntityInstance {
 	return ei
 }
 
-func (ics *ICS) listOptionStrict(w Word, de *DictionaryEntry) []RecognizedEntity {
+func (ics *ICS) listOptionStrict(w Word, de *DictionaryEntry) []*RecognizedEntity {
 
-	var res []RecognizedEntity = make([]RecognizedEntity, 0, len(de.entities))
+	var res []*RecognizedEntity = make([]*RecognizedEntity, 0, len(de.entities))
 
 	for _, entity := range de.entities {
 		re := MakeRecognizedEntity(entity, false, false, ics, string(w))
-		res = append(res, re)
+		res = append(res, &re)
 	}
 	return res
 }
 
-func (ics *ICS) proposeOptions(w Word, ctx *CTX) []RecognizedEntity {
-	var answer []RecognizedEntity
+func (ics *ICS) proposeOptions(w Word, ctx *CTX) []*RecognizedEntity {
+	var answer []*RecognizedEntity
 	if de, ok := ics.entityDictionary[w]; ok {
 		answer = ics.listOptionStrict(w, de)
 	}
