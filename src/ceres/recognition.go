@@ -91,3 +91,16 @@ func (re*RecognizedEntity) addLink(el Link, destination Entity) (int, error){
 func (re*RecognizedEntity) removeLink(index int) {
     re.entity.removeLink(index)
 }
+
+func (re*RecognizedEntity) hasLink (lt Link, destination Entity) bool {
+    return re.entity.hasLink(lt, destination)
+}
+
+func (re*RecognizedEntity) load (s[]string,
+                                 m1 map[string]group, m2 map[int]Entity) {
+    re.entity.load(s, m1, m2)
+}
+
+func (re*RecognizedEntity) store(i int, m map[Entity]int, b *[]byte) string {
+    return re.entity.store(i, m, b)
+}
