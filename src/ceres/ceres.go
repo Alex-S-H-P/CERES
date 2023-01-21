@@ -1,8 +1,5 @@
 package ceres
 
-import (
-    "fmt"
-)
 type CERES struct {
     ics ICS
     pcs PCS
@@ -62,21 +59,4 @@ func (c *CERES)  createEntityType(w Word) {
 
 func (c *CERES) createEntityInstance(w Word, et *EntityType) {
     c.ics.createEntityInstance(w, et)
-}
-
-
-func (c* CERES) computeP(idp *dijkstraPossibility) float64 {
-    var P float64 = 1
-    var past_entities []RecognizedEntity = make([]RecognizedEntity,
-        0, len(idp.analyseResult))
-    for _, re := range idp.analyseResult {
-        analyser := re.proposer
-        if analyser == nil {
-            fmt.Println("Recognized :", re,  "\nCERES :", c, "\nAnalyser :", analyser)
-            panic("analyser is nil ?")
-        }
-        P *= analyser.computeP(re, c.ctx, past_entities...)
-        past_entities = append(past_entities, re)
-    }
-    return P
 }
