@@ -120,3 +120,5 @@ func (ics *ICS) computeP(re *RecognizedEntity, ctx *CTX,
 	// TODO: code this
 	return .5
 }
+
+func (ics*ICS) name()string {return "ICS"}

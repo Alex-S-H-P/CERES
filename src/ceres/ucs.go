@@ -39,5 +39,7 @@ func (ucs*UCS)proposeOptions(w Word, ctx*CTX) []*RecognizedEntity {
 
 func (ucs*UCS)computeP(re *RecognizedEntity, ctx *CTX, previous...*RecognizedEntity) float64{
     // TODO: detect key-words related to definitions and setting values.
-    return 0.5
+    return 0.1
 }
+
+func (ucs*UCS)name()string {return "UCS"}

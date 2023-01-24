@@ -96,5 +96,7 @@ func (pcs*PCS)proposeOptions(w Word, ctx *CTX) []*RecognizedEntity {
 func (pcs*PCS)computeP(re *RecognizedEntity, ctx*CTX,
         previous_elements ...*RecognizedEntity) float64{
             // TODO: fix this
-    return 0.
+    return .25
 }
+
+func (pcs*PCS)name()string {return "PCS"}
