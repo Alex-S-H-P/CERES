@@ -90,7 +90,7 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 	}
 
 
-	possibilities = &new_possibilities
+	*possibilities = new_possibilities
 }
 
 func (c*CERES) merge(poss ceres_possibility_scored,
