@@ -78,6 +78,13 @@ func (c *CERES) allOptions(w Word) []*RecognizedEntity {
 }
 
 
+/*
+This function exists for the NOT API.
+*/
+func (c*CERES) AddEntryMethod(args ...any){
+// TODO: specify behaviour
+}
 
-    return options
+func (c *CERES) AddEntry(w Word, isType bool, options string) {
+// TODO: specify behaviour
 }
