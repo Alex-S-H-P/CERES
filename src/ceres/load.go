@@ -236,8 +236,6 @@ func grammar_load(path string) (*grammar, map[string]int, error) {
 		if len(line) == 0 {continue}
 
 		sline := strings.Split(line[:], UnitSEP)
-		fmt.Printf("loader : \"%s\"=>\"%s\"", line, sline[0])
-		fmt.Printf("\"%s\"\n", sline[1])
 
 		if len(sline) != 2 {
 			return nil, nil, fmt.Errorf("Cannot process line %v : \"%s\" (%v elements found instead of 2)",
