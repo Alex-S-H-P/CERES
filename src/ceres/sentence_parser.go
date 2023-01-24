@@ -57,19 +57,35 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 		panic("no option found")
 	}
 
-	var counter *sync.WaitGroup = new(sync.WaitGroup)
-
+	var counter_rwm *sync.RWMutex = new(sync.RWMutex)
 
 	results_getter := make(chan ceres_possibility_scored)
-	nbOfFusionsNeeded := len(*possibilities)*len(options)
+	var counter int = len(*possibilities)*len(options)
 
 
-	var new_possibilities []ceres_possibility_scored = make([]ceres_possibility_scored, nbOfFusionsNeeded)
+	var new_possibilities []ceres_possibility_scored = make([]ceres_possibility_scored, counter)
 
-	counter.Add(nbOfFusionsNeeded)
 	for _, possibility := range *possibilities {
 		for _, found_entity := range options {
-			go c.merge(possibility, found_entity, results_getter)
+			go c.merge(possibility, found_entity, results_getter, counter, counter_rwm)
+		}
+	}
+
+	getCounter := func () int {
+		counter_rwm.RLock()
+		defer counter_rwm.RUnlock()
+		return counter
+	}
+
+
+	nposs_counter := 0
+	for getCounter() > 0 {
+		select {
+		case <- time.After(1*time.Second):
+			continue
+		case poss := <- results_getter:
+			new_possibilities[nposs_counter] = poss
+			nposs_counter ++
 		}
 	}
 
@@ -79,9 +95,20 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 
 func (c*CERES) merge(poss ceres_possibility_scored,
 	fe *RecognizedEntity,
-	result_getter chan ceres_possibility_scored) {
+	result_getter chan ceres_possibility_scored,
+	counter int, counter_rwm*sync.RWMutex) {
 
+	poss.res = append(poss.res, fe)
+	poss.score *= fe.proposer.computeP(fe, c.ctx)
+	// this operation is actually the time sensitive one, the one we want parallelize.
 
+	select {
+	case result_getter <- poss:
+		counter_rwm.Lock()
+		counter_rwm.Unlock()
+	case <-time.After(3*time.Second):
+		return
+	}
 }
 
 /*
