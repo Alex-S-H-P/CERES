@@ -15,9 +15,9 @@ func (c *CERES)ParseSentence(sentence string) ([]RecognizedEntity, float64){
 	var possibilities = new([]ceres_possibility_scored)
 
 	for _, word := range split_sentence {
-		de := c.ics.entityDictionary[word]
+		options := c.allOptions(Word(word))
 
-		c.updatePossibilities(possibilities, de, word)
+		c.updatePossibilities(possibilities, options)
 	}
 
 	return getBestPossibility(possibilities)
@@ -44,7 +44,7 @@ type ceres_possibility_scored struct {
 }
 
 func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
-	de*DictionaryEntry, w Word) {
+	options []*RecognizedEntity) {
 
 	if possibilities == nil {
 		panic("Needs the possibilities to be non nil")
@@ -52,29 +52,22 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 		*possibilities = make([]ceres_possibility_scored, 1)
 	}
 
-
-	if de == nil {
-		for i, possibility := range (*possibilities) {
-			(*possibilities)[i].res = append(possibility.res,
-									      	 *c.ucs.proposeOptions(w, c.ctx)[0])
-
-			CYK_PARSE((*possibilities)[i].res, c.grammar)
-		}
-		return
+	if len(options) == 0 {
+		panic("no option found")
 	}
 
 	var counter *sync.WaitGroup = new(sync.WaitGroup)
 
 
 	results_getter := make(chan ceres_possibility_scored)
-	nbOfFusionsNeeded := len(*possibilities)*len(de.entities)
+	nbOfFusionsNeeded := len(*possibilities)*len(options)
 
 
 	var new_possibilities []ceres_possibility_scored = make([]ceres_possibility_scored, nbOfFusionsNeeded)
 
 	counter.Add(nbOfFusionsNeeded)
 	for _, possibility := range *possibilities {
-		for _, found_entity := range de.entities {
+		for _, found_entity := range options {
 			go merge(possibility, found_entity, results_getter)
 		}
 	}
