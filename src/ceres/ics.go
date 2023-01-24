@@ -32,14 +32,16 @@ May return an entity multiple time
 */
 func (ics *ICS) allEntities() generator.Generator[Entity] {
 	var mg *generator.MapGenerator[Word, *DictionaryEntry] = new(generator.MapGenerator[Word, *DictionaryEntry])
-    mg.Start(ics.entityDictionary)
+	mg.Start(ics.entityDictionary)
 	// we look at all of the values
 	key_gen := mg.Values(ics.entityDictionary)
 	// for each value, we can access its entities attribute
 	transform := func(de *DictionaryEntry) []Entity {
-        if de == nil {return nil}
-        return de.entities
-    }
+		if de == nil {
+			return nil
+		}
+		return de.entities
+	}
 	// we therefore have a generator of slice of entities
 	entities_slice_gen := generator.Transform[*DictionaryEntry, []Entity](key_gen, transform)
 	// and we can parse through a slice
