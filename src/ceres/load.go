@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"bufio"
 )
 
 const (
@@ -211,6 +212,7 @@ func (pcs*PCS)load(b*[]byte){
 
 func grammar_load(path string) (*grammar, map[string]int, error) {
 	f, e := os.Open(path)
+	reader := bufio.NewReader(f)
 	if e != nil {
 		return nil, nil, e
 	}
@@ -218,24 +220,28 @@ func grammar_load(path string) (*grammar, map[string]int, error) {
 
 	var g *grammar = new(grammar)
 	var m = make(map[string]int)
-
+	var i int
 
 	for {
-		var pline = new(string)
-		fmt.Fscanf(f, "%s\n", pline)
-
-		line := (*pline)
+		i++
+		line, err  := reader.ReadString('\n')
+		if err != nil {
+			return nil, nil, err
+		}
+		line = strings.TrimSuffix(line, "\n")
 		if (line) == "␃" {
 			break
 		}
 
 		if len(line) == 0 {continue}
 
-		sline := strings.Split(line, UnitSEP)
-		//fmt.Printf("loader : \"%s\"=>\"%s\", \"%s\"\n", line, sline[0], sline[1])
+		sline := strings.Split(line[:], UnitSEP)
+		fmt.Printf("loader : \"%s\"=>\"%s\"", line, sline[0])
+		fmt.Printf("\"%s\"\n", sline[1])
 
 		if len(sline) != 2 {
-			return nil, nil, fmt.Errorf("Cannot process line \"%s\" (%v elements found instead of 2)", line, len(sline))
+			return nil, nil, fmt.Errorf("Cannot process line %v : \"%s\" (%v elements found instead of 2)",
+			 	i, line, len(sline))
 		}
 		if len(sline[0]) != 0{
 			r := ruleString(sline[0])
