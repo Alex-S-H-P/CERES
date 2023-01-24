@@ -113,8 +113,8 @@ func (ics *ICS) proposeOptions(w Word, ctx *CTX) []*RecognizedEntity {
 	return answer
 }
 
-func (ics *ICS) computeP(re RecognizedEntity, ctx *CTX,
-	previous_elements ...RecognizedEntity) float64 {
+func (ics *ICS) computeP(re *RecognizedEntity, ctx *CTX,
+	previous_elements ...*RecognizedEntity) float64 {
 	// TODO: code this
 	return .5
 }
