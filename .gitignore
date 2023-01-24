@@ -1,4 +1,5 @@
 var/saveFolder/test.ceres*
+var/saveFolder/basic.ceres*
 src/ceres/test.ceres*
 src/test.ceres*
 test.ceres*
