@@ -247,9 +247,33 @@ func TestClosestCommonAncestor(t *testing.T) {
 func TestSentenceParser(t *testing.T){
     c := new(CERES)
     c.Initialize(1)
-    c.createEntityType("caracteristic")
-    c.createEntityType("action")
-    c.createEntityType("thing")
+    words := []Word{"caracteristic", "action", "thing"}
+    c.createEntityType(words[0])
+    c.createEntityType(words[1])
+    c.createEntityType(words[2])
 
-    c.ParseSentence("hello, I am alexandre")
+
+    thing := (c.root.links)[2].GetB().(*EntityType)
+    thing.grammar_group = group{"NOUN", thing}
+    caracteristic := (c.root.links)[1].GetB().(*EntityType)
+    caracteristic.grammar_group = group{"ADJ", caracteristic}
+    action := (c.root.links)[0].GetB().(*EntityType)
+    action.grammar_group = group{"VERB", action}
+
+    c.createEntityType("hello")
+    c.createEntityType("am")
+    c.createEntityType("Alexandre")
+    c.pcs.pronounDictionary["i"] = Pronoun{GNP:12,
+        Posessive:false,
+        Adjective:false}
+
+
+    recog, P := c.ParseSentence("hello, I am alexandre")
+    fmt.Println(P)
+    for _, el := range recog {
+        if el.proposer == &(c.ucs) {
+            t.Errorf("\"%s\" was interpreted by UCS, which is not what it should have been",
+                el.s)
+        }
+    }
 }
