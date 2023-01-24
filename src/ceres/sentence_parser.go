@@ -60,10 +60,11 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 	var counter_rwm *sync.RWMutex = new(sync.RWMutex)
 
 	results_getter := make(chan ceres_possibility_scored)
-	var counter int = len(*possibilities)*len(options)
+	var counter *int = new(int)
+	*counter = len(*possibilities)*len(options)
 
 
-	var new_possibilities []ceres_possibility_scored = make([]ceres_possibility_scored, counter)
+	var new_possibilities []ceres_possibility_scored = make([]ceres_possibility_scored, *counter)
 
 	for _, possibility := range *possibilities {
 		for _, found_entity := range options {
@@ -74,7 +75,7 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 	getCounter := func () int {
 		counter_rwm.RLock()
 		defer counter_rwm.RUnlock()
-		return counter
+		return *counter
 	}
 
 
@@ -96,7 +97,7 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 func (c*CERES) merge(poss ceres_possibility_scored,
 	fe *RecognizedEntity,
 	result_getter chan ceres_possibility_scored,
-	counter int, counter_rwm*sync.RWMutex) {
+	counter *int, counter_rwm*sync.RWMutex) {
 
 	poss.res = append(poss.res, fe)
 	poss.score *= fe.proposer.computeP(fe, c.ctx)
@@ -105,6 +106,7 @@ func (c*CERES) merge(poss ceres_possibility_scored,
 	select {
 	case result_getter <- poss:
 		counter_rwm.Lock()
+		(*counter) --
 		counter_rwm.Unlock()
 	case <-time.After(3*time.Second):
 		return
