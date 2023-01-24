@@ -59,10 +59,10 @@ func (et*EntityType) load(c[]string,
 	et.attributes = new(AttributeTypeList)
 	et.links = make([]Link, 0, len(c))
 	var i int = 2
-	fmt.Println(c)
+	//fmt.Println(c)
 	for i < len(c)-2 {
 
-		fmt.Println(i, ">", c[i])
+		//fmt.Println(i, ">", c[i])
 		switch {
 		case len(c[i]) > 2 && c[i][0] == '@':
 			attribute, err := strconv.Atoi(c[i])
@@ -193,7 +193,7 @@ func (pcs*PCS)load(b*[]byte){
 	}
 
 	C := strings.Split(string(*b), UnderSEP)
-	fmt.Println(C, b, len(C), len(*b))
+	//fmt.Println(C, b, len(C), len(*b))
 	for _, c := range C {
 		//fmt.Println("LOADING PCS", c)
 		w := Word(c[:len(c)-2])
@@ -331,7 +331,7 @@ func (et*EntityType) store(i int, m map[Entity]int, entityDict *[]byte) string {
 					safeIndexEntity(link.GetB(), m, entityDict))
 	}
 	for _, attr := range et.attributes.attrs {
-		fmt.Println("Attr ::", attr)
+		//fmt.Println("Attr ::", attr)
 		s += "@" + strconv.Itoa(
 					safeIndexEntity(attr, m, entityDict)) + UnderSEP
 	}
@@ -403,7 +403,7 @@ func (ics *ICS) save() ([]byte, []byte, map[Entity]int, error) {
 		}
 
 	}
-	fmt.Println(string(b1), string(b2))
+	//fmt.Println(string(b1), string(b2))
 	return b1[:len(b1)], b2[:len(b2)], m, nil
 }
 
@@ -442,10 +442,10 @@ func (ucs *UCS) save() ([]byte, error) {
 				b = append(b, []byte(UnderSEP)...)
 			}
 			b = append(b, []byte(w)...)
-			fmt.Println(string(b))
+			//fmt.Println(string(b))
 		}
 	}
-	fmt.Println(string(b))
+	//fmt.Println(string(b))
 	return b[:len(b)], nil
 }
 
