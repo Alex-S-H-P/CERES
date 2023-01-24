@@ -111,10 +111,18 @@ const fileSpace = "../../var/saveFolder/test.ceres"
 func TestCERES_Saving(t *testing.T) {
     c := new(CERES)
     c.Initialize(1)
+
+    c.grammar = &grammar{rules:[]rule{ruleString("NominGroup -> ADJ NOUN"),
+        ruleString("NominGroup -> ADJ NominGroup"),
+        ruleString("VerbalGroup -> NOUN VERB"),
+        ruleString("VerbalGroup -> NominGroup VERB")},
+        groups:make(map[string]group)}
+
     words := []Word{"caracteristic", "action", "thing"}
     c.createEntityType(words[0])
     c.createEntityType(words[1])
     c.createEntityType(words[2])
+
 
     thing := (c.root.links)[2].GetB().(*EntityType)
     thing.grammar_group = group{"NOUN", thing}
