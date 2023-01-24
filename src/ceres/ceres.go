@@ -56,7 +56,25 @@ func (c *CERES)  createEntityType(w Word) {
     }
 }
 
-
 func (c *CERES) createEntityInstance(w Word, et *EntityType) {
     c.ics.createEntityInstance(w, et)
+}
+
+func (c*CERES) allOptions(w Word) []*RecognizedEntity{
+    var total_capacity int
+
+    icss := c.ics.proposeOptions(w, c.ctx)
+    pcss := c.pcs.proposeOptions(w, c.ctx)
+    ucss := c.ucs.proposeOptions(w, c.ctx)
+
+    total_capacity = len(icss) + len(pcss) + len(ucss)
+
+    var options = make([]*RecognizedEntity, 0, total_capacity)
+
+    options = append(options, icss...)
+    options = append(options, pcss...)
+    options = append(options, ucss...)
+
+
+    return options
 }
