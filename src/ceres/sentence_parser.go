@@ -4,13 +4,14 @@ import (
 	"math"
 	"sync"
 	"strings"
+	"time"
 	re "regexp"
 	"CERES/src/utils"
 )
 
 var RegexpToken *re.Regexp = re.MustCompile(utils.TokenPattern)
 
-func (c *CERES)ParseSentence(sentence string) ([]RecognizedEntity, float64){
+func (c *CERES)ParseSentence(sentence string) ([]*RecognizedEntity, float64){
 	split_sentence := c.SplitSentence(sentence)
 	var possibilities = new([]ceres_possibility_scored)
 
@@ -24,8 +25,8 @@ func (c *CERES)ParseSentence(sentence string) ([]RecognizedEntity, float64){
 }
 
 
-func getBestPossibility(possibilities *[]ceres_possibility_scored) ([]RecognizedEntity, float64) {
-	var best_res []RecognizedEntity
+func getBestPossibility(possibilities *[]ceres_possibility_scored) ([]*RecognizedEntity, float64) {
+	var best_res []*RecognizedEntity
 	var best_score float64 = math.Inf(-1)
 
 	for _, possibilities := range *possibilities {
@@ -39,7 +40,7 @@ func getBestPossibility(possibilities *[]ceres_possibility_scored) ([]Recognized
 }
 
 type ceres_possibility_scored struct {
-	res []RecognizedEntity
+	res []*RecognizedEntity
 	score float64
 }
 
@@ -68,7 +69,7 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 	counter.Add(nbOfFusionsNeeded)
 	for _, possibility := range *possibilities {
 		for _, found_entity := range options {
-			go merge(possibility, found_entity, results_getter)
+			go c.merge(possibility, found_entity, results_getter)
 		}
 	}
 
@@ -76,8 +77,8 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 	possibilities = &new_possibilities
 }
 
-func merge(poss ceres_possibility_scored,
-	fe Entity,
+func (c*CERES) merge(poss ceres_possibility_scored,
+	fe *RecognizedEntity,
 	result_getter chan ceres_possibility_scored) {
 
 
