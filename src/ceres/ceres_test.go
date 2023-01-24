@@ -106,7 +106,7 @@ func TestIsTypeOf(t *testing.T) {
     }
 }
 
-const fileSpace = "test.ceres"
+const fileSpace = "../../var/saveFolder/test.ceres"
 
 func TestCERES_Saving(t *testing.T) {
     c := new(CERES)
