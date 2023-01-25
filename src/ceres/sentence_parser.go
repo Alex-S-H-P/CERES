@@ -119,14 +119,17 @@ func (c *CERES) merge(poss ceres_possibility_scored,
 	// this operation is actually the time sensitive one, the one we want parallelize.
 
 	//println("waiting on lock")
-	select {
-	case result_getter <- poss:
-		fmt.Printf("SENT %s %p\n", poss.ToString(), &poss)
+
+	defer func() {
 		counter_rwm.Lock()
 		(*counter)--
 		counter_rwm.Unlock()
+	}()
+
+	select {
+	case result_getter <- poss:
+		fmt.Printf("SENT %s %p\n", poss.ToString(), &poss)
 	case <-time.After(3 * time.Second):
-		return
 	}
 }
 
