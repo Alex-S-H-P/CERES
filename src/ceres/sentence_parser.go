@@ -105,16 +105,10 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 	*possibilities = new_possibilities
 }
 
-var debugLock sync.Mutex
-
 func (c *CERES) merge(poss ceres_possibility_scored,
 	fe *RecognizedEntity,
 	result_getter chan ceres_possibility_scored,
 	counter *int, counter_rwm *sync.RWMutex) {
-
-	debugLock.Lock()
-	defer debugLock.Unlock()
-	defer fmt.Println("-----------------")
 
 	fmt.Printf("%s * %f\n", poss.ToString(), fe.proposer.computeP(fe, c.ctx))
 	poss.res = append(poss.res, fe)
@@ -162,7 +156,7 @@ func beamFilter(cpss []ceres_possibility_scored, size int) []ceres_possibility_s
 Splits a sentence along the whitespace and the apostrophe characters
 */
 func (c *CERES) SplitSentence(sentence string) []Word {
-	var seps = " 󠀧'  -−＇‾ʼ՚ߴߵ\"«»,"
+	var seps = " \U000e0027'  -−＇‾ʼ՚ߴߵ\"«»,"
 
 	splitter := func(r rune) bool {
 		return strings.ContainsRune(seps, r)
