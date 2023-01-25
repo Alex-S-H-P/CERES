@@ -36,6 +36,9 @@ func (c *CERES) load(fn string) error {
 	*b1, *b2, *b3, *b4 = []byte(C[0]), []byte(C[1]), []byte(C[2]), []byte(C[3])
 
 	workers, err = strconv.Atoi(C[4])
+	if err != nil {
+		return err
+	}
 	c.sentence_analyser_workers = workers
 	var future_action_groups map[string]int
 
