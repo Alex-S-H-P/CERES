@@ -248,7 +248,7 @@ func grammar_load(path string) (*grammar, map[string]int, error) {
 		sline := strings.Split(line[:], UnitSEP)
 
 		if len(sline) != 2 {
-			return nil, nil, fmt.Errorf("Cannot process line %v : \"%s\" (%v elements found instead of 2)",
+			return nil, nil, fmt.Errorf("cannot process line %v : \"%s\" (%v elements found instead of 2)",
 				i, line, len(sline))
 		}
 		if len(sline[0]) != 0 {
@@ -260,7 +260,7 @@ func grammar_load(path string) (*grammar, map[string]int, error) {
 			//fmt.Println(b[0], "|>", b[1])
 			id, err := strconv.Atoi(b[1])
 			if err != nil {
-				return nil, nil, fmt.Errorf("Could not extract entityID :%s", err.Error())
+				return nil, nil, fmt.Errorf("could not extract entityID :%s", err.Error())
 			}
 			m[b[0]] = id
 		}
@@ -464,7 +464,7 @@ func (ucs *UCS) save() ([]byte, error) {
 
 func (g *grammar) save(path string, m map[Entity]int) error {
 	if g == nil {
-		return fmt.Errorf("Cannot save non-existant grammar")
+		return fmt.Errorf("cannot save non-existant grammar")
 	}
 	var contents string
 
