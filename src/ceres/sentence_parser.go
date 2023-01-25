@@ -174,23 +174,3 @@ func (c *CERES) SplitSentence(sentence string) []Word {
 
 	return words
 }
-
-func (c *CERES) makeNonWordEntity(token string) RecognizedEntity {
-	// TODO handle all cases.
-	switch recognizeType(token) {
-	case TOKEN_TYPE_PRIC:
-		// make a temporary price entity
-	case TOKEN_TYPE_CURR:
-		// replace with the currency's entity.
-	case TOKEN_TYPE_INTN, TOKEN_TYPE_NUMB:
-		// make temporary number entity
-	case TOKEN_TYPE_UNKN:
-		// fetch unknown. If failed make one.
-	}
-
-	// FIXME: this code is temporary
-	ei := new(EntityInstance)
-
-	return RecognizedEntity{entity: ei,
-		possessive: false, attribute: false, proposer: &c.ucs}
-}
