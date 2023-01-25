@@ -1,6 +1,7 @@
 package ceres
 
 import (
+	"fmt"
 	"math"
 	"sync"
 	"strings"
@@ -16,9 +17,13 @@ func (c *CERES)ParseSentence(sentence string) ([]*RecognizedEntity, float64){
 	var possibilities = new([]ceres_possibility_scored)
 
 	for _, word := range split_sentence {
-		options := c.allOptions(Word(word))
+		fmt.Println("============[OPERATING] on", word, "===================")
 
+		options := c.allOptions(Word(word))
 		c.updatePossibilities(possibilities, options)
+		res, sc := getBestPossibility(possibilities)
+		cps := ceres_possibility_scored{res:res, score:sc}
+		fmt.Printf("%s, %p\n", cps.ToString(), cps.res[len(cps.res)-1])
 	}
 
 	return getBestPossibility(possibilities)
@@ -44,6 +49,14 @@ type ceres_possibility_scored struct {
 	score float64
 }
 
+func (cps*ceres_possibility_scored) ToString() string  {
+	var s string = "["
+	for _, re := range cps.res {
+		s += fmt.Sprintf("(\"%s\", \"%s\")", re.s, re.proposer.name())
+	}
+	return s + "] : " + fmt.Sprintf("%f", cps.score)
+}
+
 func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 	options []*RecognizedEntity) {
 
@@ -51,6 +64,7 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 		panic("Needs the possibilities to be non nil")
 	} else if len(*possibilities) == 0 {
 		*possibilities = make([]ceres_possibility_scored, 1)
+		(*possibilities)[0].score = 1.
 	}
 
 	if len(options) == 0 {
@@ -90,21 +104,33 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 		}
 	}
 
-
+	beamFilter(new_possibilities, 4)
 	*possibilities = new_possibilities
 }
+
+var debugLock sync.Mutex
 
 func (c*CERES) merge(poss ceres_possibility_scored,
 	fe *RecognizedEntity,
 	result_getter chan ceres_possibility_scored,
 	counter *int, counter_rwm*sync.RWMutex) {
 
+	debugLock.Lock()
+	defer debugLock.Unlock()
+	defer fmt.Println("-----------------")
+
+	fmt.Printf("%s * %f\n", poss.ToString(), fe.proposer.computeP(fe, c.ctx))
 	poss.res = append(poss.res, fe)
 	poss.score *= fe.proposer.computeP(fe, c.ctx)
+	fmt.Printf("[%s < %s | %3f | %s ] on %s @%p, %p \n", fe.s, fe.proposer.name(),
+	 			poss.score, poss.res[len(poss.res)-1].proposer.name(),
+				poss.ToString(), &poss, fe)
 	// this operation is actually the time sensitive one, the one we want parallelize.
 
+	//println("waiting on lock")
 	select {
 	case result_getter <- poss:
+		fmt.Printf("SENT %s %p\n", poss.ToString(), &poss)
 		counter_rwm.Lock()
 		(*counter) --
 		counter_rwm.Unlock()
@@ -113,11 +139,31 @@ func (c*CERES) merge(poss ceres_possibility_scored,
 	}
 }
 
+func beamFilter(cpss []ceres_possibility_scored, size int) []ceres_possibility_scored {
+	if size <= 0 {panic("invalid size")}
+	answer_array := make([]ceres_possibility_scored, 0, size*2)
+
+	for _, cps := range cpss{
+		var i int
+		for i=0; i<len(answer_array); i++{
+			answer_array = PutInto[ceres_possibility_scored](answer_array, i, cps)
+			if len(answer_array) > size {
+				answer_array = answer_array[:size]
+			}
+		}
+		if i < cap(answer_array)/2 {
+			answer_array = append(answer_array, cps)
+		}
+	}
+
+	return answer_array[:size]
+}
+
 /*
 Splits a sentence along the whitespace and the apostrophe characters
 */
 func (c *CERES)SplitSentence(sentence string)[]Word {
-	var seps=" 󠀧'  -−＇‾ʼ՚ߴߵ\"«»"
+	var seps=" 󠀧'  -−＇‾ʼ՚ߴߵ\"«»,"
 
 	splitter := func(r rune) bool {
 		return strings.ContainsRune(seps, r)
