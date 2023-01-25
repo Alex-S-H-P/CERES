@@ -262,13 +262,13 @@ func TestSentenceParser(t *testing.T){
 
     c.createEntityType("hello")
     c.createEntityType("am")
-    c.createEntityType("Alexandre")
+    c.createEntityType("alexandre")
     c.pcs.pronounDictionary["i"] = Pronoun{GNP:12,
         Posessive:false,
         Adjective:false}
 
 
-    recog, P := c.ParseSentence("hello, I am alexandre")
+    recog, P := c.ParseSentence("hello I am alexandre")
     fmt.Println(P)
     for _, el := range recog {
         if el.proposer == &(c.ucs) {
