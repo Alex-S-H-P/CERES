@@ -1,18 +1,18 @@
 package ceres
 
 import (
+	"CERES/src/utils"
 	"fmt"
 	"math"
-	"sync"
-	"strings"
-	"time"
 	re "regexp"
-	"CERES/src/utils"
+	"strings"
+	"sync"
+	"time"
 )
 
 var RegexpToken *re.Regexp = re.MustCompile(utils.TokenPattern)
 
-func (c *CERES)ParseSentence(sentence string) ([]*RecognizedEntity, float64){
+func (c *CERES) ParseSentence(sentence string) ([]*RecognizedEntity, float64) {
 	split_sentence := c.SplitSentence(sentence)
 	var possibilities = new([]ceres_possibility_scored)
 
@@ -22,13 +22,12 @@ func (c *CERES)ParseSentence(sentence string) ([]*RecognizedEntity, float64){
 		options := c.allOptions(Word(word))
 		c.updatePossibilities(possibilities, options)
 		res, sc := getBestPossibility(possibilities)
-		cps := ceres_possibility_scored{res:res, score:sc}
+		cps := ceres_possibility_scored{res: res, score: sc}
 		fmt.Printf("%s, %p\n", cps.ToString(), cps.res[len(cps.res)-1])
 	}
 
 	return getBestPossibility(possibilities)
 }
-
 
 func getBestPossibility(possibilities *[]ceres_possibility_scored) ([]*RecognizedEntity, float64) {
 	var best_res []*RecognizedEntity
@@ -37,7 +36,7 @@ func getBestPossibility(possibilities *[]ceres_possibility_scored) ([]*Recognize
 	for _, possibilities := range *possibilities {
 		if possibilities.score > best_score {
 			best_score = possibilities.score
-			best_res   = possibilities.res
+			best_res = possibilities.res
 		}
 	}
 
@@ -45,11 +44,11 @@ func getBestPossibility(possibilities *[]ceres_possibility_scored) ([]*Recognize
 }
 
 type ceres_possibility_scored struct {
-	res []*RecognizedEntity
+	res   []*RecognizedEntity
 	score float64
 }
 
-func (cps*ceres_possibility_scored) ToString() string  {
+func (cps *ceres_possibility_scored) ToString() string {
 	var s string = "["
 	for _, re := range cps.res {
 		s += fmt.Sprintf("(\"%s\", \"%s\")", re.s, re.proposer.name())
@@ -75,8 +74,7 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 
 	results_getter := make(chan ceres_possibility_scored)
 	var counter *int = new(int)
-	*counter = len(*possibilities)*len(options)
-
+	*counter = len(*possibilities) * len(options)
 
 	var new_possibilities []ceres_possibility_scored = make([]ceres_possibility_scored, *counter)
 
@@ -86,21 +84,20 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 		}
 	}
 
-	getCounter := func () int {
+	getCounter := func() int {
 		counter_rwm.RLock()
 		defer counter_rwm.RUnlock()
 		return *counter
 	}
 
-
 	nposs_counter := 0
 	for getCounter() > 0 {
 		select {
-		case <- time.After(1*time.Second):
+		case <-time.After(1 * time.Second):
 			continue
-		case poss := <- results_getter:
+		case poss := <-results_getter:
 			new_possibilities[nposs_counter] = poss
-			nposs_counter ++
+			nposs_counter++
 		}
 	}
 
@@ -110,10 +107,10 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 
 var debugLock sync.Mutex
 
-func (c*CERES) merge(poss ceres_possibility_scored,
+func (c *CERES) merge(poss ceres_possibility_scored,
 	fe *RecognizedEntity,
 	result_getter chan ceres_possibility_scored,
-	counter *int, counter_rwm*sync.RWMutex) {
+	counter *int, counter_rwm *sync.RWMutex) {
 
 	debugLock.Lock()
 	defer debugLock.Unlock()
@@ -123,8 +120,8 @@ func (c*CERES) merge(poss ceres_possibility_scored,
 	poss.res = append(poss.res, fe)
 	poss.score *= fe.proposer.computeP(fe, c.ctx)
 	fmt.Printf("[%s < %s | %3f | %s ] on %s @%p, %p \n", fe.s, fe.proposer.name(),
-	 			poss.score, poss.res[len(poss.res)-1].proposer.name(),
-				poss.ToString(), &poss, fe)
+		poss.score, poss.res[len(poss.res)-1].proposer.name(),
+		poss.ToString(), &poss, fe)
 	// this operation is actually the time sensitive one, the one we want parallelize.
 
 	//println("waiting on lock")
@@ -132,21 +129,23 @@ func (c*CERES) merge(poss ceres_possibility_scored,
 	case result_getter <- poss:
 		fmt.Printf("SENT %s %p\n", poss.ToString(), &poss)
 		counter_rwm.Lock()
-		(*counter) --
+		(*counter)--
 		counter_rwm.Unlock()
-	case <-time.After(3*time.Second):
+	case <-time.After(3 * time.Second):
 		return
 	}
 }
 
 func beamFilter(cpss []ceres_possibility_scored, size int) []ceres_possibility_scored {
-	if size <= 0 {panic("invalid size")}
+	if size <= 0 {
+		panic("invalid size")
+	}
 	answer_array := make([]ceres_possibility_scored, 0, size*2)
 
-	for _, cps := range cpss{
+	for _, cps := range cpss {
 		var i int
-		for i=0; i<len(answer_array); i++{
-			answer_array = PutInto[ceres_possibility_scored](answer_array, i, cps)
+		for i = 0; i < len(answer_array); i++ {
+			answer_array = PutInto(answer_array, i, cps)
 			if len(answer_array) > size {
 				answer_array = answer_array[:size]
 			}
@@ -162,8 +161,8 @@ func beamFilter(cpss []ceres_possibility_scored, size int) []ceres_possibility_s
 /*
 Splits a sentence along the whitespace and the apostrophe characters
 */
-func (c *CERES)SplitSentence(sentence string)[]Word {
-	var seps=" 󠀧'  -−＇‾ʼ՚ߴߵ\"«»,"
+func (c *CERES) SplitSentence(sentence string) []Word {
+	var seps = " 󠀧'  -−＇‾ʼ՚ߴߵ\"«»,"
 
 	splitter := func(r rune) bool {
 		return strings.ContainsRune(seps, r)
@@ -179,7 +178,7 @@ func (c *CERES)SplitSentence(sentence string)[]Word {
 	return words
 }
 
-func (c *CERES)makeNonWordEntity(token string) RecognizedEntity {
+func (c *CERES) makeNonWordEntity(token string) RecognizedEntity {
 	// TODO handle all cases.
 	switch recognizeType(token) {
 	case TOKEN_TYPE_PRIC:
@@ -195,6 +194,6 @@ func (c *CERES)makeNonWordEntity(token string) RecognizedEntity {
 	// FIXME: this code is temporary
 	ei := new(EntityInstance)
 
-	return RecognizedEntity{entity:ei,
-		possessive:false, attribute:false, proposer:&c.ucs}
+	return RecognizedEntity{entity: ei,
+		possessive: false, attribute: false, proposer: &c.ucs}
 }

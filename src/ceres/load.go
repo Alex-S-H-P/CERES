@@ -1,17 +1,17 @@
 package ceres
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
-	"bufio"
 )
 
 const (
 	sto_fmt_split = "␞"
-	UnderSEP = "␣"
-	UnitSEP  = "␟"
+	UnderSEP      = "␣"
+	UnitSEP       = "␟"
 )
 
 const storage_format string = "%s" + sto_fmt_split + "%s" + sto_fmt_split +
@@ -40,7 +40,9 @@ func (c *CERES) load(fn string) error {
 	var future_action_groups map[string]int
 
 	c.grammar, future_action_groups, err = grammar_load(fn + ".grammar")
-	if err != nil {return err}
+	if err != nil {
+		return err
+	}
 
 	solver := c.ics.load(b1, b2, c.grammar.groups)
 	//fmt.Println(c, "\n", c.root)
@@ -53,10 +55,9 @@ func (c *CERES) load(fn string) error {
 	return err
 }
 
-
-func (et*EntityType) load(c[]string,
-			grammar_groups map[string]group,
-			m map[int] Entity) {
+func (et *EntityType) load(c []string,
+	grammar_groups map[string]group,
+	m map[int]Entity) {
 	et.attributes = new(AttributeTypeList)
 	et.links = make([]Link, 0, len(c))
 	var i int = 2
@@ -67,28 +68,32 @@ func (et*EntityType) load(c[]string,
 		switch {
 		case len(c[i]) > 2 && c[i][0] == '@':
 			attribute, err := strconv.Atoi(c[i])
-			if err != nil {panic(err)}
+			if err != nil {
+				panic(err)
+			}
 
 			et.attributes.attrs = append(et.attributes.attrs,
 				m[attribute].(*EntityType))
 		case len(c[i]) > 1 && c[i][0] == '@':
 			i++
 			continue
-		case len(c[i])>1 &&c[i][0]!= '@':
+		case len(c[i]) > 1 && c[i][0] != '@':
 			d := strings.Split(c[i], "-")
-			typeOfLink,linkTo_string := d[0], d[1]
+			typeOfLink, linkTo_string := d[0], d[1]
 			linkTo, err := strconv.Atoi(linkTo_string)
 			destinationFound := m[linkTo]
 			if destinationFound == nil {
 				panic(fmt.Sprintf("Could not find item @%v in %v",
 					linkTo, m))
 			}
-			if err != nil {panic(err)}
+			if err != nil {
+				panic(err)
+			}
 
 			/*fmt.Println("CURRENT", c[0], c[1], "#", typeOfLink, linkTo, "#",
-				FindListType(typeOfLink).typeOfLink(),
-				"\""+typeOfLink+"\"",
-				destinationFound)*/
+			FindListType(typeOfLink).typeOfLink(),
+			"\""+typeOfLink+"\"",
+			destinationFound)*/
 			link := FindListType(typeOfLink).set(et, destinationFound)
 			et.links = append(et.links, link)
 		}
@@ -98,20 +103,24 @@ func (et*EntityType) load(c[]string,
 	et.grammar_group = grammar_groups[c[len(c)-1]]
 }
 
-func (ei*EntityInstance) load(c[]string,
-			grammar_groups map[string]group,
-			m map[int] Entity) {
+func (ei *EntityInstance) load(c []string,
+	grammar_groups map[string]group,
+	m map[int]Entity) {
 
 	ei.values = new(AttributeInstanceList)
 	ei.values.values = make(map[*EntityType]Word)
 	typeOfIndex, err := strconv.Atoi(c[1])
-	if err != nil { panic(err)	}
+	if err != nil {
+		panic(err)
+	}
 	ei.typeOf = m[typeOfIndex].(*EntityType)
 	for _, attrSegment := range c[2:] {
 		d := strings.SplitN(attrSegment, ":", 2)
 
 		attrIndex, err := strconv.Atoi(d[0])
-		if err != nil {panic(err)}
+		if err != nil {
+			panic(err)
+		}
 
 		var attr *EntityType = m[attrIndex].(*EntityType)
 		ei.values.values[attr] = Word(d[1])
@@ -127,17 +136,16 @@ func newEntityToLoad(fields []string) Entity {
 		ei := new(EntityInstance)
 		return ei
 	default:
-		panic(fmt.Sprintf("Bad entity category \"%s\" (either \"inst\" or \"type\")",  fields[0]))
+		panic(fmt.Sprintf("Bad entity category \"%s\" (either \"inst\" or \"type\")", fields[0]))
 	}
 }
-
 
 /*
 Loads ics.
 
 Should not run while any other goroutine has access to the ICS.
 */
-func (ics*ICS)load(b1,b2 *[]byte, grammar_groups map[string]group) map[int]Entity{
+func (ics *ICS) load(b1, b2 *[]byte, grammar_groups map[string]group) map[int]Entity {
 	// setting b2
 	m := make(map[int]Entity)
 	C := strings.Split(string(*b2), UnitSEP)
@@ -172,10 +180,10 @@ func (ics*ICS)load(b1,b2 *[]byte, grammar_groups map[string]group) map[int]Entit
 			panic(err)
 		}
 		var w = Word(b_[0])
-		if DE, ok := ics.entityDictionary[w];ok {
+		if DE, ok := ics.entityDictionary[w]; ok {
 			DE.entities = append(DE.entities, m[index])
 		} else {
-			DE := DictionaryEntry{entities:[]Entity{m[index]}}
+			DE := DictionaryEntry{entities: []Entity{m[index]}}
 			ics.entityDictionary[w] = &DE
 		}
 	}
@@ -184,7 +192,7 @@ func (ics*ICS)load(b1,b2 *[]byte, grammar_groups map[string]group) map[int]Entit
 	return m
 }
 
-func (pcs*PCS)load(b*[]byte){
+func (pcs *PCS) load(b *[]byte) {
 
 	if pcs.pronounDictionary == nil {
 		pcs.pronounDictionary = make(map[Word]Pronoun)
@@ -203,7 +211,7 @@ func (pcs*PCS)load(b*[]byte){
 		if err != nil {
 			panic(err)
 		}
-		p := Pronoun{GNP:int8(gnp)}
+		p := Pronoun{GNP: int8(gnp)}
 		p.Posessive = (t / 2) == 1
 		p.Adjective = (t % 2) == 1
 		pcs.pronounDictionary[w] = p
@@ -224,7 +232,7 @@ func grammar_load(path string) (*grammar, map[string]int, error) {
 
 	for {
 		i++
-		line, err  := reader.ReadString('\n')
+		line, err := reader.ReadString('\n')
 		if err != nil {
 			return nil, nil, err
 		}
@@ -233,15 +241,17 @@ func grammar_load(path string) (*grammar, map[string]int, error) {
 			break
 		}
 
-		if len(line) == 0 {continue}
+		if len(line) == 0 {
+			continue
+		}
 
 		sline := strings.Split(line[:], UnitSEP)
 
 		if len(sline) != 2 {
 			return nil, nil, fmt.Errorf("Cannot process line %v : \"%s\" (%v elements found instead of 2)",
-			 	i, line, len(sline))
+				i, line, len(sline))
 		}
-		if len(sline[0]) != 0{
+		if len(sline[0]) != 0 {
 			r := ruleString(sline[0])
 			g.rules = append(g.rules, r)
 		}
@@ -260,7 +270,7 @@ func grammar_load(path string) (*grammar, map[string]int, error) {
 	return g, m, nil
 }
 
-func (g*grammar) resolve_future_actions_on_loading(solver map [int]Entity, future_actions map[string]int){
+func (g *grammar) resolve_future_actions_on_loading(solver map[int]Entity, future_actions map[string]int) {
 	//fmt.Println("resolver : ", solver, future_actions)
 	for name, entityID := range future_actions {
 		et := solver[entityID].(*EntityType)
@@ -269,7 +279,7 @@ func (g*grammar) resolve_future_actions_on_loading(solver map [int]Entity, futur
 	}
 }
 
-func (ucs*UCS)load(b*[]byte){
+func (ucs *UCS) load(b *[]byte) {
 	C := strings.Split(string(*b), UnderSEP)
 	ucs.unrecognized_words = make([]Word, 0, len(C))
 	for _, c := range C {
@@ -279,13 +289,12 @@ func (ucs*UCS)load(b*[]byte){
 
 func (c *CERES) save(fn string) error {
 
-
 	b1, b2, m, e := c.ics.save()
 	if e != nil {
 		return e
 	}
 
-	e = c.grammar.save(fn + ".grammar", m)
+	e = c.grammar.save(fn+".grammar", m)
 	if e != nil {
 		return e
 	}
@@ -327,17 +336,17 @@ func indexEntity(e Entity, m map[Entity]int) (int, bool) {
 	return n, true
 }
 
-func (et*EntityType) store(i int, m map[Entity]int, entityDict *[]byte) string {
+func (et *EntityType) store(i int, m map[Entity]int, entityDict *[]byte) string {
 	var s string = "␟type␣" + strconv.Itoa(i) + UnderSEP
 	//fmt.Println("Indexing", et, "...")
 	for _, link := range et.links {
 		s += fmt.Sprintf("%s-%d␣", link.typeOfLink(),
-					safeIndexEntity(link.GetB(), m, entityDict))
+			safeIndexEntity(link.GetB(), m, entityDict))
 	}
 	for _, attr := range et.attributes.attrs {
 		//fmt.Println("Attr ::", attr)
 		s += "@" + strconv.Itoa(
-					safeIndexEntity(attr, m, entityDict)) + UnderSEP
+			safeIndexEntity(attr, m, entityDict)) + UnderSEP
 	}
 	s += string(et.word) + UnderSEP
 	s += et.grammar_group.String() + UnderSEP
@@ -345,14 +354,14 @@ func (et*EntityType) store(i int, m map[Entity]int, entityDict *[]byte) string {
 	return s
 }
 
-func (ei*EntityInstance) store(i int, m map[Entity]int, entityDict *[]byte) string {
+func (ei *EntityInstance) store(i int, m map[Entity]int, entityDict *[]byte) string {
 	var s string
 	s = "␟inst␣" + strconv.Itoa(safeIndexEntity(ei, m, entityDict)) + "␣" +
-	strconv.Itoa(safeIndexEntity(ei.typeOf, m, entityDict)) + "␣"
+		strconv.Itoa(safeIndexEntity(ei.typeOf, m, entityDict)) + "␣"
 	for _, attr := range ei.values.attrs {
 		val := ei.values.values[attr]
 		s += strconv.Itoa(safeIndexEntity(attr, m, entityDict)) + ":" +
-		string(val) + "␣"
+			string(val) + "␣"
 	}
 
 	return s
@@ -370,14 +379,14 @@ func safeIndexEntity(e Entity, m map[Entity]int, entityDict *[]byte) int {
 
 	i, ok := indexEntity(e, m)
 	if ok { // we have a new entity. Let's add it to the list,
-		var s string = e.store(i ,m, entityDict)
+		var s string = e.store(i, m, entityDict)
 
 		s = strings.TrimSuffix(s, "␣")
 		if len(*entityDict) == 0 {
 			s = strings.TrimPrefix(s, "␟")
 		}
 		//fmt.Println("Adding", s+"("+strconv.Itoa(len(s))+") to", string(*entityDict))
-		*entityDict = append(*entityDict, []byte(s[:len(s)])...)
+		*entityDict = append(*entityDict, []byte(s[:])...)
 	}
 	return i
 }
@@ -408,7 +417,7 @@ func (ics *ICS) save() ([]byte, []byte, map[Entity]int, error) {
 
 	}
 	//fmt.Println(string(b1), string(b2))
-	return b1[:len(b1)], b2[:len(b2)], m, nil
+	return b1[:], b2[:], m, nil
 }
 
 func (pcs *PCS) save() ([]byte, error) {
@@ -450,12 +459,13 @@ func (ucs *UCS) save() ([]byte, error) {
 		}
 	}
 	//fmt.Println(string(b))
-	return b[:len(b)], nil
+	return b[:], nil
 }
 
-
-func (g*grammar)save(path string, m map[Entity]int)error {
-	if g == nil {return fmt.Errorf("Cannot save non-existant grammar")}
+func (g *grammar) save(path string, m map[Entity]int) error {
+	if g == nil {
+		return fmt.Errorf("Cannot save non-existant grammar")
+	}
 	var contents string
 
 	f, e := os.Create(path)
@@ -473,18 +483,18 @@ func (g*grammar)save(path string, m map[Entity]int)error {
 		}
 	}
 
-	for line := 0; line < len(m) || line < len(g.rules); line ++ {
+	for line := 0; line < len(m) || line < len(g.rules); line++ {
 		var ruleSub, entitySub string
 		if line < len(g.rules) {
 			ruleSub = g.rules[line].String()
 		}
-		if line < len(key_arr){
+		if line < len(key_arr) {
 			if key_arr[line] != nil {
 				et := key_arr[line]
 
-				entitySub = fmt.Sprintf("%s>%v", et.grammar_group.String(),m[Entity(et)])
+				entitySub = fmt.Sprintf("%s>%v", et.grammar_group.String(), m[Entity(et)])
 
-			} else if line >= len(g.rules){
+			} else if line >= len(g.rules) {
 				break
 			}
 		}

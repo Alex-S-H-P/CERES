@@ -43,11 +43,11 @@ func (ics *ICS) allEntities() generator.Generator[Entity] {
 		return de.entities
 	}
 	// we therefore have a generator of slice of entities
-	entities_slice_gen := generator.Transform[*DictionaryEntry, []Entity](key_gen, transform)
+	entities_slice_gen := generator.Transform(key_gen, transform)
 	// and we can parse through a slice
-	mesa_parser := func(s []Entity) generator.Generator[Entity] { return generator.SliceGenerator[Entity](s) }
+	mesa_parser := func(s []Entity) generator.Generator[Entity] { return generator.SliceGenerator(s) }
 	// we combine them and return the last one
-	return generator.Combine[[]Entity, Entity](entities_slice_gen, mesa_parser)
+	return generator.Combine(entities_slice_gen, mesa_parser)
 }
 
 func (ics *ICS) createEntityType(w Word) *EntityType {
@@ -121,4 +121,4 @@ func (ics *ICS) computeP(re *RecognizedEntity, ctx *CTX,
 	return .5
 }
 
-func (ics*ICS) name()string {return "ICS"}
+func (ics *ICS) name() string { return "ICS" }
