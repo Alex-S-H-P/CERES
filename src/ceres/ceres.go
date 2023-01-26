@@ -182,14 +182,38 @@ func (c *CERES) AddEntry(w Word, isType bool, options map[string][]string) error
 }
 
 func (c *CERES) addEI(w Word, parent *EntityType, ggroup group) error {
+	c.ics.createEntityInstance(w, parent)
+
+	if ggroup != parent.grammar_group && ggroup.name != "" {
+		return fmt.Errorf("wanted to add instance \"%s\" with group \"%s\", but the instance does not match the parent. Kept the parent", w, ggroup.String())
+	}
 	return nil
 }
 
 func (c *CERES) addET(w Word, parent *EntityType, ggroup group) error {
-	var et = new(EntityType)
+	var et = c.ics.createEntityType(w)
 
 	if ggroup.instanceSolver == nil {
 		ggroup.instanceSolver = et
+	}
+
+	if parent == nil {
+		if c.root == nil {
+			if ggroup.name == "" {
+				ggroup.name = "[UNKNOWN]"
+			}
+			c.root = et
+			et.grammar_group = ggroup
+			return nil
+		}
+		parent = c.root
+	}
+	parent.addChild(et)
+	if ggroup.name == "" {
+		et.grammar_group = parent.grammar_group
+	} else {
+		// TODO : change the instance solver of the ggroup to the closest common root
+		et.grammar_group = ggroup
 	}
 
 	return nil
