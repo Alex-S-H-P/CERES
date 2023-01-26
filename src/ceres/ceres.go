@@ -159,7 +159,7 @@ func (c *CERES) AddEntry(w Word, isType bool, options map[string][]string) error
 
 		parent, ok = de.entities[index].(*EntityType)
 		if !ok {
-			return fmt.Errorf("%s : entity at item %v is instance, not type.",
+			return fmt.Errorf("%s : entity at item %v is instance, not type",
 				errorPrefix, index)
 		}
 	}
