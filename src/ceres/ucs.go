@@ -36,7 +36,10 @@ func (ucs *UCS) makeNonWordEntity(token string) *RecognizedEntity {
 	ei := new(EntityInstance)
 
 	return &RecognizedEntity{entity: ei,
-		possessive: false, attribute: false, proposer: ucs}
+		possessive: false,
+		attribute:  false,
+		proposer:   ucs,
+		s:          token}
 }
 
 /*
