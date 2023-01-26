@@ -12,3 +12,10 @@ path_to_pipe: "pipe/"
 # how many workers
 # By default (-1), this is the number of local cores.
 workers: -1
+# Where the data is stored
+# You may change this to load and save from another file
+#   Please ensure that this other file exists
+main_save: "./var/saveFolder/main.ceres"
+# Where the backup is stored.
+# Upon closing 
+backup_save: "./var/saveFolder/bckp.ceres"

@@ -13,6 +13,9 @@ type CERES_Config struct {
 	Path_to_pipe string
 
 	Workers int
+
+	Main_save   string
+	Backup_save string
 }
 
 func GetConfig(path string) *CERES_Config {
