@@ -340,6 +340,7 @@ func _closestAncestor(head1, head2 *EntityType,
 
 			nheads1 = append(nheads1, h1.directTypeOf()...)
 		}
+		heads1 = nheads1
 
 		for _, h2 := range heads2 {
 			found, countinue_execution := _testIfClosestAncestor(h2, m, 2)
@@ -352,6 +353,7 @@ func _closestAncestor(head1, head2 *EntityType,
 
 			nheads2 = append(nheads2, h2.directTypeOf()...)
 		}
+		heads2 = nheads2
 	}
 
 	return nil
