@@ -1,49 +1,56 @@
 package main
 
 import (
-    "os"
-    "os/signal"
+	"os"
+	"os/signal"
 
-    "fmt"
-    "syscall"
+	"fmt"
+	"syscall"
 
-    "CERES/src/config"
-    pprint "CERES/src/utils/printUtils"
-    api "github.com/Alex-S-H-P/NOT_API"
+	src "CERES/src/ceres"
+	"CERES/src/config"
+	pprint "CERES/src/utils/printUtils"
+
+	api "github.com/Alex-S-H-P/NOT_API"
 )
 
 func main() {
 
-    conf := config.GetConfig("./var/config/general.yaml")
-    pprint.PrintHLine('=')
-    path_to_pipe := "var/" + conf.Path_to_pipe
+	var ceres = new(src.CERES)
 
-    var availableMethods map[string]api.Method = map[string]api.Method{}
+	conf := config.GetConfig("./var/config/general.yaml")
+	pprint.PrintHLine('=')
+	path_to_pipe := "var/" + conf.Path_to_pipe
 
-    pprint.PrintCentered("CERES")
-    pprint.PrintHLine('=')
+	var availableMethods = map[string]api.Method{"addEntry": ceres.AddEntryMethod}
 
-    fmt.Println("To close",
-        pprint.Color("CERES", "cyan"), ", press",
-        pprint.Color("[CRTL+C]", "bold red"))
+	pprint.PrintCentered("CERES")
+	pprint.PrintHLine('=')
 
-    p := api.StartProcess("CERES",
-                     availableMethods,
-                     path_to_pipe + "CERES",
-                     path_to_pipe + "__in__")
+	fmt.Println("To close",
+		pprint.Color("CERES", "cyan"), ", press",
+		pprint.Color("[CRTL+C]", "bold red"))
 
-    c := make(chan os.Signal, 32)
-    signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	p := api.StartProcess("CERES",
+		availableMethods,
+		path_to_pipe+"CERES",
+		path_to_pipe+"__in__")
 
-    select {
-    case <-c:
-        fmt.Println("\tCauhgt a CRTL+C, closing")
-        p.Stop()
-        break
-    case <-p.ListenToClosure():
-        break
-    }
+	c := make(chan os.Signal, 32)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
-    pprint.PrintHLine('_')
-    fmt.Println(pprint.Color("Goodbye !", "cyan"))
+	select {
+	case <-c:
+		fmt.Println("\tCauhgt a CRTL+C, closing")
+		p.Stop()
+		break
+	case <-p.ListenToClosure():
+		break
+	}
+
+	ceres.Initialize(conf.Workers)
+	ceres.Load(conf.Main_save, conf.Backup_save)
+
+	pprint.PrintHLine('_')
+	fmt.Println(pprint.Color("Goodbye !", "cyan"))
 }

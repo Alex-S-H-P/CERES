@@ -48,6 +48,20 @@ func (c *CERES) Initialize(workers int) {
 }
 
 /*
+Tries to load the data stored in the mainSave file.
+*/
+func (c *CERES) Load(mainSave, lastSave string) (error, error) {
+	err := c.load(mainSave)
+	if err == nil {
+		return nil, nil
+	} else if lastSave != "" {
+		return err, c.load(lastSave)
+	} else {
+		return err, fmt.Errorf("last save was also not defined. CERES is now blank")
+	}
+}
+
+/*
 Creates a valid entityType.
 
 Adds it to the CERES dictionary.
