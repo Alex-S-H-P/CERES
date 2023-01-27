@@ -85,6 +85,7 @@ type Entity interface {
 	GetGender() int8
 	removeLink(int)
 	hasLink(Link, Entity) bool
+	findLink(Link, Entity) int
 
 	// loading and saving methods
 	store(int, map[Entity]int, *[]byte) string
@@ -197,10 +198,61 @@ func (ei *EntityInstance) hasLink(linkType Link, destination Entity) bool {
 	return false
 }
 
+/*
+Adds a link between the instance and the child of type HYPERNYMY.
+
+If the parent and the child share parents,
+then the parents are removed from the child.
+*/
 func (et *EntityType) addChild(childEntity Entity) error {
+	parent_intersect := utils.Intersect(et.directTypeOf(), childEntity.directTypeOf())
+
+	ei, ok := childEntity.(*EntityInstance)
+
+	for _, commonParent := range parent_intersect {
+		if ok && ei.typeOf == commonParent {
+			ei.typeOf = et
+			continue
+		}
+
+	}
+
 	return AddLink(HYPERNYMY{}, et, childEntity)
 }
 
+/*
+Tries to find the link, returns its index. Returns -1 if can't
+*/
+func (et *EntityType) findLink(l Link, toward Entity) int {
+	for i, L := range et.links {
+		if L.GetB() == toward &&
+			L.typeOfLink() == l.typeOfLink() {
+			return i
+		}
+	}
+	return -1
+}
+
+/*
+Tries to find the link, returns its index. Returns -1 if can't
+*/
+func (ei *EntityInstance) findLink(l Link, toward Entity) int {
+	for i, L := range ei.otherLinks {
+		if L.GetB() == toward &&
+			L.typeOfLink() == l.typeOfLink() {
+			return i
+		}
+	}
+	return -1
+}
+
+/*
+Adds a link between the instance and the destination.
+EmptyLink needs to be passed an empty instance to get the type.
+
+Does not add the reverse link.
+To add that, view AddLink(Link, Entity Entity)
+*/
 func (et *EntityType) addLink(emptyLink Link, destination Entity) (int, error) {
 	link := emptyLink.set(et, destination)
 	et.links = append(et.links, link)
@@ -208,15 +260,25 @@ func (et *EntityType) addLink(emptyLink Link, destination Entity) (int, error) {
 	return len(et.links) - 1, nil
 }
 
+/*
+Adds a link between this instance and the destination.
+Empty links needs to be passed an empty instance to get the type
+
+Does not add the reverse link.
+To add that, view AddLink(Link, Entity Entity)
+
+If the link is a HYPONYMY (ei is a child of something) and the instance
+does not have ei.typeOf set, sets it with the destination.
+*/
 func (ei *EntityInstance) addLink(emptyLink Link, destination Entity) (int, error) {
 	_, is_hypnomy := emptyLink.(HYPONYMY)
-	destination_as_class, ok := destination.(*EntityType)
+	destination_as_type, ok := destination.(*EntityType)
 	if is_hypnomy && ok && ei.typeOf == nil {
-		ei.typeOf = destination_as_class
+		ei.typeOf = destination_as_type
 		return -1, nil
 	} else if ei.typeOf != nil {
 		return -1, fmt.Errorf("cannot set typeOf of instance with \"%s\", as it already is of class \"%s\"",
-			ei.typeOf.word, destination_as_class.word)
+			ei.typeOf.word, destination_as_type.word)
 	} else if !ok {
 		return -1, fmt.Errorf("cannot set typeOf of instance with non class %v", destination)
 	}
@@ -232,6 +294,11 @@ func (ei *EntityInstance) addLink(emptyLink Link, destination Entity) (int, erro
 
 // adds a link between source and destination..
 // You can pass an empty link to specify the type of the link
+
+// Also adds the reverse link from the destination to the source.
+// If the link already exists, does not add it.
+
+//
 func AddLink(emptyLink Link, source, destination Entity) error {
 	var i int
 	var err error
