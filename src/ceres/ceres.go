@@ -136,11 +136,11 @@ func (c *CERES) AddEntryMethod(p *api.Process,
 	delete(m, "word")
 	delete(m, "isType")
 
-	err = c.AddEntry(Word(w), isType, m)
+	_, err = c.AddEntry(Word(w), isType, m)
 	fmt.Println(err)
 }
 
-func (c *CERES) AddEntry(w Word, isType bool, options map[string][]string) error {
+func (c *CERES) AddEntry(w Word, isType bool, options map[string][]string) (Entity, error) {
 
 	const errorPrefix = "could not process addEntry request"
 
@@ -149,17 +149,17 @@ func (c *CERES) AddEntry(w Word, isType bool, options map[string][]string) error
 	if parentArg, ok := options["--parent"]; ok {
 		index, err := strconv.Atoi(parentArg[1])
 		if err != nil {
-			return fmt.Errorf("%s : %v", errorPrefix, err)
+			return nil, fmt.Errorf("%s : %v", errorPrefix, err)
 		}
 		de := c.ics.entityDictionary[Word(parentArg[0])]
 		if len(de.entities) <= index {
-			return fmt.Errorf("%s : index given was out of range (%v >= %v)",
+			return nil, fmt.Errorf("%s : index given was out of range (%v >= %v)",
 				errorPrefix, index, len(de.entities))
 		}
 
 		parent, ok = de.entities[index].(*EntityType)
 		if !ok {
-			return fmt.Errorf("%s : entity at item %v is instance, not type",
+			return nil, fmt.Errorf("%s : entity at item %v is instance, not type",
 				errorPrefix, index)
 		}
 	}
@@ -169,7 +169,7 @@ func (c *CERES) AddEntry(w Word, isType bool, options map[string][]string) error
 		} else if isType {
 			ggroup = group{name: ggroupArg[0], instanceSolver: nil}
 		} else {
-			return fmt.Errorf("%s : Group %s not found",
+			return nil, fmt.Errorf("%s : Group %s not found",
 				errorPrefix, ggroupArg[0])
 		}
 	}
@@ -181,18 +181,21 @@ func (c *CERES) AddEntry(w Word, isType bool, options map[string][]string) error
 	}
 }
 
-func (c *CERES) addEI(w Word, parent *EntityType, ggroup group) error {
-	c.ics.createEntityInstance(w, parent)
+func (c *CERES) addEI(w Word, parent *EntityType, ggroup group) (*EntityInstance, error) {
+	ei := c.ics.createEntityInstance(w, parent)
 
 	if ggroup != parent.grammar_group && ggroup.name != "" {
-		return fmt.Errorf("wanted to add instance \"%s\" with group \"%s\", but the instance does not match the parent. Kept the parent", w, ggroup.String())
+		return nil, fmt.Errorf("wanted to add instance \"%s\" with group \"%s\", but the instance does not match the parent. Kept the parent", w, ggroup.String())
 	}
-	return nil
+	return ei, nil
 }
 
-func (c *CERES) addET(w Word, parent *EntityType, ggroup group) error {
+func (c *CERES) addET(w Word, parent *EntityType, ggroup group) (*EntityType, error) {
 	var et = c.ics.createEntityType(w)
 
+	if found, ok := c.grammar.groups[ggroup.name]; ok {
+		ggroup = found
+	}
 	if ggroup.instanceSolver == nil {
 		ggroup.instanceSolver = et
 	}
@@ -204,7 +207,7 @@ func (c *CERES) addET(w Word, parent *EntityType, ggroup group) error {
 			}
 			c.root = et
 			et.grammar_group = ggroup
-			return nil
+			return et, nil
 		}
 		parent = c.root
 	}
@@ -216,5 +219,5 @@ func (c *CERES) addET(w Word, parent *EntityType, ggroup group) error {
 		et.grammar_group = ggroup
 	}
 
-	return nil
+	return et, nil
 }
