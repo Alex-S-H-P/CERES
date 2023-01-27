@@ -12,6 +12,9 @@ import (
 
 var RegexpToken *re.Regexp = re.MustCompile(utils.TokenPattern)
 
+/*
+Parses the sentence and returns an array of recognized entities as well as the score of that possibility.
+*/
 func (c *CERES) ParseSentence(sentence string) ([]*RecognizedEntity, float64) {
 	split_sentence := c.SplitSentence(sentence)
 	var possibilities = new([]ceres_possibility_scored)
