@@ -212,7 +212,14 @@ If the parent and the child share parents,
 then the parents are removed from the child.
 */
 func (et *EntityType) addChild(childEntity Entity) error {
-	parent_intersect := utils.Intersect(et.directTypeOf(), childEntity.directTypeOf())
+
+	err := AddLink(HYPERNYMY{}, et, childEntity)
+	if err != nil {
+		return err
+	}
+
+	parent_intersect := utils.Intersect(et.directTypeOf(),
+		childEntity.directTypeOf())
 
 	ei, ok := childEntity.(*EntityInstance)
 
@@ -221,10 +228,11 @@ func (et *EntityType) addChild(childEntity Entity) error {
 			ei.typeOf = et
 			continue
 		}
-		childEntity.removeLink(childEntity.findLink(HYPONYMY{}, commonParent))
+		var index int = childEntity.findLink(HYPONYMY{}, commonParent)
+		childEntity.removeLink(index)
 	}
 
-	return AddLink(HYPERNYMY{}, et, childEntity)
+	return nil
 }
 
 /*
