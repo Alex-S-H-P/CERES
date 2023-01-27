@@ -12,6 +12,19 @@ func DeepCopy[K comparable, V any](m map[K]V) map[K]V {
 	return n
 }
 
+/*
+Creates a copy of the map1, adds into it the element of map2
+*/
+func Merge[K comparable, V any](m1, m2 map[K]V) map[K]V {
+	m := DeepCopy(m1)
+
+	for k2, v2 := range m2 {
+		m[k2] = v2
+	}
+
+	return m
+}
+
 func MinKey[K comparable, V any](m map[K]V, keyInf func(K, K) bool) K {
 	var minKey *K
 	for k, _ := range m {
