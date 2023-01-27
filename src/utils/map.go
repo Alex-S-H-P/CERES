@@ -27,7 +27,7 @@ func Merge[K comparable, V any](m1, m2 map[K]V) map[K]V {
 
 func MinKey[K comparable, V any](m map[K]V, keyInf func(K, K) bool) K {
 	var minKey *K
-	for k, _ := range m {
+	for k := range m {
 		if minKey == nil {
 			minKey = &k
 		} else {
