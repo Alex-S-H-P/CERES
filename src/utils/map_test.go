@@ -47,3 +47,29 @@ func TestMinKey(t *testing.T) {
 		t.Error("cannot handle <nil> map")
 	}
 }
+
+func TestReverseMap(t *testing.T) {
+	var m = make(map[int]string)
+	m[1] = "1"
+	m[2] = "2"
+	m[3] = "3"
+
+	w, err := ReverseMap(m)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if i, ok := w["1"]; !ok || i != 1 {
+		t.Fail()
+	}
+	if i, ok := w["2"]; !ok || i != 2 {
+		t.Fail()
+	}
+
+	m[4] = "1"
+	_, err = ReverseMap(m)
+	if err == nil {
+		t.Error("Failed to detect non-reversible map")
+	}
+}
