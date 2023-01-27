@@ -32,7 +32,6 @@ func MinKey[K comparable, V any](m map[K]V, keyInf func(K, K) bool) K {
 
 	var minKey *K
 	for k := range m {
-		fmt.Println(k, minKey)
 		if minKey == nil {
 			minKey = new(K)
 			*minKey = k
