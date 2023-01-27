@@ -79,6 +79,13 @@ func (ei *EntityInstance) GetNumber() int8 {
 type Entity interface {
 	directTypeOf() []*EntityType
 	Initialize()
+	/*
+		Adds a link between the instance and the destination.
+		EmptyLink needs to be passed an empty instance to get the type.
+
+		Does not add the reverse link.
+		To add that, view AddLink(Link, Entity Entity)
+	*/
 	addLink(Link, Entity) (int, error)
 	Equal(utils.Equalable) bool
 	GetNumber() int8
@@ -214,7 +221,7 @@ func (et *EntityType) addChild(childEntity Entity) error {
 			ei.typeOf = et
 			continue
 		}
-
+		childEntity.removeLink(childEntity.findLink(HYPONYMY{}, commonParent))
 	}
 
 	return AddLink(HYPERNYMY{}, et, childEntity)
