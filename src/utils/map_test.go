@@ -30,8 +30,7 @@ func TestMergeMaps(t *testing.T) {
 }
 
 func TestMinKey(t *testing.T) {
-	var m map[int]int
-	m = make(map[int]int)
+	var m = make(map[int]int)
 
 	m[1] = -1
 	m[2] = -2

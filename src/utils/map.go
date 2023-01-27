@@ -49,7 +49,7 @@ func ReverseMap[K, V comparable](m map[K]V) (map[V]K, error) {
 	M := make(map[V]K)
 	for k, v := range m {
 		if _, ok := M[v]; ok {
-			return nil, fmt.Errorf("Could not reverse map. Value %v was present twice", v)
+			return nil, fmt.Errorf("could not reverse map. Value %v was present twice", v)
 		}
 		M[v] = k
 	}
