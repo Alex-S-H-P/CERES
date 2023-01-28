@@ -41,7 +41,7 @@ func (ctx *CTX) Initialize() {
 }
 
 func (ctx *CTX) P_ctx() float64 {
-	var P float64 = 0.
+	var P float64 = 1.
 
 	for i := 0; i < ctx.expressed_buffer.Len(); i++ {
 		entry := ctx.expressed_buffer.Get(i)
