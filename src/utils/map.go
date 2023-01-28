@@ -55,3 +55,15 @@ func ReverseMap[K, V comparable](m map[K]V) (map[V]K, error) {
 	}
 	return M, nil
 }
+
+type number interface {
+	int | float64 | float32 | complex128 | complex64 | uint | int8 | int16 | int32 | int64 | uint8 | uint16 | uint32 | uint64
+}
+
+func SumMap[K comparable, N number](m map[K]N) N {
+	var rslt = new(N)
+	for _, n := range m {
+		*rslt += n
+	}
+	return *rslt
+}
