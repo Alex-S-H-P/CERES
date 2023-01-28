@@ -51,7 +51,20 @@ type ceres_possibility_scored struct {
 	score float64
 }
 
+func (cps *ceres_possibility_scored) copy() *ceres_possibility_scored {
+	cps2 := new(ceres_possibility_scored)
+
+	cps2.score = cps.score
+	cps2.res = make([]*RecognizedEntity,
+		len(cps.res),
+		len(cps.res)+1)
+	copy(cps2.res, cps.res)
+
+	return cps2
+}
+
 func (cps *ceres_possibility_scored) ToString() string {
+
 	var s string = "["
 	for _, re := range cps.res {
 		s += fmt.Sprintf("(\"%s\", \"%s\")", re.s, re.proposer.name())
@@ -83,7 +96,8 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 
 	for _, possibility := range *possibilities {
 		for _, found_entity := range options {
-			go c.merge(possibility, found_entity, results_getter, counter, counter_rwm)
+			go c.merge(*possibility.copy(), found_entity,
+				results_getter, counter, counter_rwm)
 		}
 	}
 
@@ -97,14 +111,13 @@ func (c *CERES) updatePossibilities(possibilities *[]ceres_possibility_scored,
 	for getCounter() > 0 {
 		select {
 		case <-time.After(1 * time.Second):
+			fmt.Println("Waited a bit")
 			continue
 		case poss := <-results_getter:
 			new_possibilities[nposs_counter] = poss
 			nposs_counter++
 		}
 	}
-
-	beamFilter(new_possibilities, 4)
 	*possibilities = new_possibilities
 }
 
@@ -113,7 +126,8 @@ func (c *CERES) merge(poss ceres_possibility_scored,
 	result_getter chan ceres_possibility_scored,
 	counter *int, counter_rwm *sync.RWMutex) {
 
-	fmt.Printf("%s * %f\n", poss.ToString(), fe.proposer.computeP(fe, c.ctx))
+	fmt.Printf("%s * %f\n", poss.ToString(),
+		fe.proposer.computeP(fe, c.ctx))
 	poss.res = append(poss.res, fe)
 	poss.score *= fe.proposer.computeP(fe, c.ctx)
 	fmt.Printf("[%s < %s | %3f | %s ] on %s @%p, %p \n", fe.s, fe.proposer.name(),
@@ -134,28 +148,6 @@ func (c *CERES) merge(poss ceres_possibility_scored,
 		fmt.Printf("SENT %s %p\n", poss.ToString(), &poss)
 	case <-time.After(3 * time.Second):
 	}
-}
-
-func beamFilter(cpss []ceres_possibility_scored, size int) []ceres_possibility_scored {
-	if size <= 0 {
-		panic("invalid size")
-	}
-	answer_array := make([]ceres_possibility_scored, 0, size*2)
-
-	for _, cps := range cpss {
-		var i int
-		for i = 0; i < len(answer_array); i++ {
-			answer_array = PutInto(answer_array, i, cps)
-			if len(answer_array) > size {
-				answer_array = answer_array[:size]
-			}
-		}
-		if i < cap(answer_array)/2 {
-			answer_array = append(answer_array, cps)
-		}
-	}
-
-	return answer_array[:size]
 }
 
 /*
