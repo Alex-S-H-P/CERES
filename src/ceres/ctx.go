@@ -40,13 +40,13 @@ func (ctx *CTX) Initialize() {
 	ctx.expressed_buffer = utils.NewBuffer[PreExpressedCTXEntry](256)
 }
 
-func (ctx *CTX) P_ctx() float64 {
-	var P float64 = 1.
-
+func (ctx *CTX) Contains(e Entity) (PreExpressedCTXEntry, bool) {
 	for i := 0; i < ctx.expressed_buffer.Len(); i++ {
-		entry := ctx.expressed_buffer.Get(i)
-		P *= entry.s
+		pece := ctx.expressed_buffer.Get(i)
+		if pece.Entity().Equal(e) {
+			return pece, true
+		}
 	}
 
-	return P
+	return PreExpressedCTXEntry{}, false
 }
