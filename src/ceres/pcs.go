@@ -77,7 +77,7 @@ func (pcs *PCS) proposeOptions(w Word, ctx *CTX) []*RecognizedEntity {
 			return []*RecognizedEntity{re}
 		}
 		for i := 0; i < ctx.expressed_buffer.Len(); i++ {
-			buffered := ctx.expressed_buffer.Get(i)
+			buffered := ctx.expressed_buffer.Get(i).Entity()
 			if buffered.GetGender() == g || g == UNKNOWN || buffered.GetGender() == UNKNOWN {
 				if buffered.GetNumber() == n {
 					*re = MakeRecognizedEntity(buffered,
