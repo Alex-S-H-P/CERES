@@ -48,12 +48,12 @@ func (et *EntityType) allDescendantsInstance() []*EntityInstance {
 		}
 
 		child := link.GetB()
-		switch child.(type) {
+		switch c := child.(type) {
 		case *EntityType:
-			desc := child.(*EntityType).allDescendantsInstance()
+			desc := c.allDescendantsInstance()
 			arr = append(arr, desc...)
 		case *EntityInstance:
-			arr = append(arr, child.(*EntityInstance))
+			arr = append(arr, c)
 		}
 
 	}
